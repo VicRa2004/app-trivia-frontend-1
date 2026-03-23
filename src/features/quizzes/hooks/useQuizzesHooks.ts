@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuizzesFn, createQuizFn, getQuizByIdFn, createQuestionFn } from '../api/quizzes.api';
+import { getQuizzesFn, createQuizFn, getQuizByIdFn, createQuestionFn, updateQuizFn } from '../api/quizzes.api';
 import { useNavigate } from 'react-router-dom';
 
 export const useQuizzesQuery = (page = 1, limit = 10) => {
@@ -26,6 +26,18 @@ export const useCreateQuizMutation = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['quizzes'] });
       navigate(`/dashboard/quiz/${data.id}/edit`);
+    },
+  });
+};
+
+export const useUpdateQuizMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateQuizFn,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['quizzes', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['quizzes'] });
     },
   });
 };

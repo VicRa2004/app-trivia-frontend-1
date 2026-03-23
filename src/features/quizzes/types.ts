@@ -49,8 +49,17 @@ export interface PaginatedResponse<T> {
 export interface CreateQuizData {
   title: string;
   description: string;
+  thumbnailUrl?: string;
   categoryId?: string;
   isPublic: boolean;
+}
+
+export interface UpdateQuizData {
+  title?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  categoryId?: string;
+  isPublic?: boolean;
 }
 
 export interface CreateQuestionData {

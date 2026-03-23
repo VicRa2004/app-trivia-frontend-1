@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Button } from '../components/Button';
-import { Loader2, Plus, GripVertical, CheckCircle2, Image as ImageIcon, Edit2, X } from 'lucide-react';
-import { useQuizByIdQuery, useCreateQuestionMutation } from '../features/quizzes/hooks/useQuizzesHooks';
+import { Loader2, Plus, GripVertical, CheckCircle2, Image as ImageIcon, Edit2, X, Save } from 'lucide-react';
+import { useQuizByIdQuery, useCreateQuestionMutation, useUpdateQuizMutation } from '../features/quizzes/hooks/useQuizzesHooks';
 import type { QuizQuestion } from '../features/quizzes/types';
 
 const EditQuiz = () => {
@@ -12,6 +12,7 @@ const EditQuiz = () => {
   const navigate = useNavigate();
   const { data: quiz, isLoading, isError } = useQuizByIdQuery(id!);
   const { mutate: saveQuestion, isPending: isSaving } = useCreateQuestionMutation();
+  const { mutate: updateQuiz, isPending: isUpdatingQuiz } = useUpdateQuizMutation();
 
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState('');
@@ -23,6 +24,26 @@ const EditQuiz = () => {
     { content: '', imageUrl: '', isCorrect: false, position: 3 },
     { content: '', imageUrl: '', isCorrect: false, position: 4 },
   ]);
+
+  const [isEditingQuiz, setIsEditingQuiz] = useState(false);
+  const [quizBanner, setQuizBanner] = useState('');
+
+  // Sincronizar quizBanner inicial desde quiz.thumbnailUrl (solucionamos el lint error)
+  if (quiz && quizBanner === '' && quiz.thumbnailUrl) {
+     setQuizBanner(quiz.thumbnailUrl);
+  }
+
+  const handleQuestionTypeChange = (newType: string) => {
+    setQuestionType(newType);
+    if (newType === 'true_false') {
+      setOptions(opts => [
+        { ...opts[0], content: 'Verdadero', position: 1, isCorrect: opts[0].isCorrect },
+        { ...opts[1], content: 'Falso', position: 2, isCorrect: !opts[0].isCorrect },
+        { ...opts[2], content: '', position: 3, isCorrect: false },
+        { ...opts[3], content: '', position: 4, isCorrect: false },
+      ]);
+    }
+  };
 
   const resetForm = () => {
     setEditingQuestionId(null);
@@ -72,11 +93,12 @@ const EditQuiz = () => {
           timeLimit: 20,
           orderNumber: (quiz?.questions?.length || 0) + 1,
           options: options
-             .filter(opt => questionType !== 'short_answer' || opt.content.trim() !== '')
+             .slice(0, questionType === 'true_false' ? 2 : questionType === 'short_answer' ? 3 : 4)
+             .filter((opt, i) => questionType !== 'short_answer' || (opt.content && opt.content.trim() !== '') || i === 0) // At least 1 required for short answer
              .map((opt, i) => ({
              ...opt,
              content: questionType === 'image_choice' ? `Imagen ${i + 1}` : opt.content,
-             isCorrect: questionType === 'short_answer' ? true : opt.isCorrect,
+             isCorrect: questionType === 'short_answer' ? true : questionType === 'true_false' ? opt.isCorrect : opt.isCorrect,
              position: i + 1,
              imageUrl: opt.imageUrl ? opt.imageUrl : undefined
           })),
@@ -92,15 +114,32 @@ const EditQuiz = () => {
   };
 
   const setCorrectOption = (index: number) => {
-    setOptions(opts => opts.map((o, i) => ({ ...o, isCorrect: i === index })));
+    if (questionType === 'true_false') {
+      setOptions(opts => opts.map((o, i) => ({ ...o, isCorrect: i === index })));
+    } else {
+      setOptions(opts => opts.map((o, i) => ({ ...o, isCorrect: i === index })));
+    }
   };
 
   const changeOptionText = (index: number, val: string) => {
+    if (questionType === 'true_false') return; 
     setOptions(opts => opts.map((o, i) => i === index ? { ...o, content: val } : o));
   };
 
   const changeOptionImage = (index: number, val: string) => {
     setOptions(opts => opts.map((o, i) => i === index ? { ...o, imageUrl: val } : o));
+  };
+
+  const handleSaveQuizBanner = () => {
+    if (!id) return;
+    updateQuiz({
+      quizId: id,
+      data: { thumbnailUrl: quizBanner }
+    }, {
+      onSuccess: () => {
+        setIsEditingQuiz(false);
+      }
+    });
   };
 
   if (isLoading) return <Layout><div className="flex justify-center p-20"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div></Layout>;
@@ -111,8 +150,59 @@ const EditQuiz = () => {
       <div className="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 animate-in fade-in">
          {/* Sidebar: Lista de Preguntas creadas */}
          <div className="w-full md:w-1/3 flex flex-col gap-4">
-            <h2 className="text-xl font-bold px-2">{quiz.title}</h2>
-            <Card className="h-fit max-h-[70vh] overflow-y-auto">
+            
+            {/* Banner Section */}
+            <Card className="overflow-hidden border-border/50">
+              <div className="relative h-32 bg-primary/10 border-b">
+                 {(quizBanner || quiz.thumbnailUrl) ? (
+                   <img 
+                     src={quizBanner || quiz.thumbnailUrl} 
+                     alt="Quiz Banner" 
+                     className="w-full h-full object-cover"
+                     onError={(e) => {
+                       (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Banner+no+encontrado';
+                     }}
+                   />
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-text-muted">
+                      Sin Banner
+                   </div>
+                 )}
+                 <Button 
+                   size="sm" 
+                   variant="secondary" 
+                   onClick={() => setIsEditingQuiz(!isEditingQuiz)} 
+                   className="absolute top-2 right-2 bg-white/80 hover:bg-white text-xs shadow-sm"
+                 >
+                   <Edit2 size={14} className="mr-1" /> Banner
+                 </Button>
+              </div>
+              
+              {isEditingQuiz && (
+                <div className="p-3 bg-surface border-b animate-in slide-in-from-top-2">
+                  <label className="text-xs font-bold text-text-main mb-1 block">URL del Banner</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      className="flex-1 text-sm p-2 rounded-lg border border-border outline-none focus:border-primary"
+                      placeholder="https://..."
+                      value={quizBanner}
+                      onChange={e => setQuizBanner(e.target.value)}
+                    />
+                    <Button size="sm" onClick={handleSaveQuizBanner} isLoading={isUpdatingQuiz} className="px-2">
+                      <Save size={16} />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-4">
+                <h2 className="text-xl font-bold text-text-main wrap-break-word">{quiz.title}</h2>
+                <p className="text-sm text-text-muted mt-1 wrap-break-word">{quiz.description}</p>
+              </div>
+            </Card>
+
+            <Card className="h-fit max-h-[50vh] overflow-y-auto">
                <CardHeader className="sticky top-0 bg-surface z-10 border-b pb-2 mb-2">
                  <CardTitle className="text-sm text-text-muted uppercase">Preguntas ({quiz.questions?.length || 0})</CardTitle>
                </CardHeader>
@@ -151,7 +241,7 @@ const EditQuiz = () => {
                    {editingQuestionId ? <><Edit2 /> Editar Pregunta</> : <><Plus /> Añadir Nueva Pregunta</>}
                 </CardTitle>
                 {editingQuestionId && (
-                   <button onClick={resetForm} className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-full transition-colors flex items-center gap-2 font-bold text-sm">
+                   <button type="button" onClick={resetForm} className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-full transition-colors flex items-center gap-2 font-bold text-sm">
                       <X size={16} /> Cancelar Edición
                    </button>
                 )}
@@ -174,10 +264,11 @@ const EditQuiz = () => {
                           <label className="text-sm font-bold text-text-main">Tipo de Pregunta</label>
                           <select 
                             value={questionType}
-                            onChange={(e) => setQuestionType(e.target.value)}
+                            onChange={(e) => handleQuestionTypeChange(e.target.value)}
                             className="p-3 bg-surface border-2 border-border rounded-2xl outline-none focus:border-primary transition-all text-text-main font-semibold"
                           >
                              <option value="multiple_choice">Opción Múltiple</option>
+                             <option value="true_false">Falso o Verdadero</option>
                              <option value="image_choice">Selección de Imagen</option>
                              <option value="short_answer">Respuesta Corta</option>
                              <option value="ordering">Ordenamiento</option>
@@ -192,17 +283,32 @@ const EditQuiz = () => {
                             onChange={(e) => setImageUrl(e.target.value)}
                             className="p-3 bg-surface border-2 border-border rounded-2xl outline-none focus:border-primary transition-all text-text-main"
                           />
+                          {imageUrl && (
+                            <div className="mt-2 h-20 w-32 rounded-lg relative overflow-hidden border border-border">
+                              <img 
+                                src={imageUrl} 
+                                alt="preview" 
+                                className="object-cover w-full h-full"
+                                onError={(e) => {
+                                   (e.target as HTMLImageElement).src = 'https://placehold.co/128x80?text=Error';
+                                }}
+                              />
+                            </div>
+                          )}
                        </div>
                     </div>
 
                     <div className="flex justify-between items-center mt-6">
                       <label className="font-bold text-text-main text-lg">Opciones de Respuesta</label>
                       {questionType === 'ordering' && <span className="text-sm text-primary font-semibold bg-primary/10 px-3 py-1 rounded-full">Coloca las opciones en orden del 1 al 4</span>}
-                      {questionType === 'short_answer' && <span className="text-sm text-green-700 font-semibold bg-green-500/10 px-3 py-1 rounded-full">Aceptadas como correctas</span>}
+                      {questionType === 'short_answer' && <span className="text-sm text-green-700 font-semibold bg-green-500/10 px-3 py-1 rounded-full">Aceptadas como correctas (Máx 3)</span>}
+                      {questionType === 'true_false' && <span className="text-sm text-blue-700 font-semibold bg-blue-500/10 px-3 py-1 rounded-full">Selecciona la correcta</span>}
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 mt-2">
-                       {options.map((opt, i) => (
+                       {options
+                         .slice(0, questionType === 'true_false' ? 2 : questionType === 'short_answer' ? 3 : 4)
+                         .map((opt, i) => (
                          <div key={i} className={`flex flex-col gap-2 p-3 rounded-2xl border-2 transition-all ${(opt.isCorrect && questionType !== 'ordering' && questionType !== 'short_answer') || questionType === 'short_answer' ? 'border-green-500 bg-green-500/10' : 'border-border bg-surface'}`}>
                             <div className="flex items-center gap-3">
                                {questionType !== 'ordering' && questionType !== 'short_answer' && (
@@ -227,24 +333,39 @@ const EditQuiz = () => {
                                {questionType !== 'image_choice' && (
                                  <input
                                    type="text"
-                                   className="w-full bg-transparent outline-none font-bold text-lg placeholder:font-normal placeholder:text-sm text-text-main"
+                                   className={`w-full bg-transparent outline-none font-bold text-lg placeholder:font-normal placeholder:text-sm ${questionType === 'true_false' ? 'text-text-main opacity-80 cursor-default' : 'text-text-main'}`}
                                    placeholder={questionType === 'short_answer' ? `Respuesta válida ${i+1}${i > 0 ? ' (Opcional)' : ''}` : `Texto de Opción ${i+1}`}
                                    value={opt.content}
                                    onChange={(e) => changeOptionText(i, e.target.value)}
+                                   readOnly={questionType === 'true_false'}
                                    required={(i < 2 && questionType !== 'short_answer' && questionType !== 'image_choice') || (i === 0 && questionType === 'short_answer') || questionType === 'ordering'}
                                  />
                                )}
                             </div>
-                            <div className="flex items-center gap-2 pl-[3.25rem] pr-2 mt-1">
-                               <ImageIcon size={16} className="text-text-muted" />
-                               <input
-                                 type="text"
-                                 className="w-full bg-transparent outline-none text-sm placeholder:text-text-muted/60 text-text-muted"
-                                 placeholder={questionType === 'image_choice' ? "URL de Imagen (Requerida)" : "URL de Imagen (Opcional)"}
-                                 value={opt.imageUrl || ''}
-                                 onChange={(e) => changeOptionImage(i, e.target.value)}
-                                 required={questionType === 'image_choice' && i < 2}
-                               />
+                            <div className="flex flex-col gap-1 pl-13 pr-2 mt-1">
+                               <div className="flex items-center gap-2">
+                                 <ImageIcon size={16} className="text-text-muted" />
+                                 <input
+                                   type="text"
+                                   className="w-full bg-transparent outline-none text-sm placeholder:text-text-muted/60 text-text-muted"
+                                   placeholder={questionType === 'image_choice' ? "URL de Imagen (Requerida)" : "URL de Imagen (Opcional)"}
+                                   value={opt.imageUrl || ''}
+                                   onChange={(e) => changeOptionImage(i, e.target.value)}
+                                   required={questionType === 'image_choice' && i < 2}
+                                 />
+                               </div>
+                               {opt.imageUrl && (
+                                 <div className="mt-2 h-16 w-24 rounded-md overflow-hidden border border-border bg-surface relative">
+                                    <img 
+                                      src={opt.imageUrl} 
+                                      alt={`Preview ${i+1}`} 
+                                      className="object-cover w-full h-full"
+                                      onError={(e) => {
+                                         (e.target as HTMLImageElement).src = 'https://placehold.co/96x64?text=X';
+                                      }}
+                                    />
+                                 </div>
+                               )}
                             </div>
                          </div>
                        ))}

@@ -1,5 +1,5 @@
 import { api } from '../../../api/axios';
-import type { Quiz, PaginatedResponse, CreateQuizData, QuizQuestion, CreateQuestionData } from '../types';
+import type { Quiz, PaginatedResponse, CreateQuizData, QuizQuestion, CreateQuestionData, UpdateQuizData } from '../types';
 
 export const getQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedResponse<Quiz>> => {
   const response = await api.get<PaginatedResponse<Quiz>>(`/quizzes?page=${page}&limit=${limit}`);
@@ -13,6 +13,11 @@ export const getQuizByIdFn = async (id: string): Promise<Quiz> => {
 
 export const createQuizFn = async (data: CreateQuizData): Promise<Quiz> => {
   const response = await api.post<Quiz>('/quizzes', data);
+  return response.data;
+};
+
+export const updateQuizFn = async ({ quizId, data }: { quizId: string, data: UpdateQuizData }): Promise<Quiz> => {
+  const response = await api.patch<Quiz>(`/quizzes/${quizId}`, data);
   return response.data;
 };
 

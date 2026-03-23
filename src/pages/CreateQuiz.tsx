@@ -3,20 +3,21 @@ import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { FileText, Save } from 'lucide-react';
+import { FileText, Save, Image as ImageIcon } from 'lucide-react';
 import { useCreateQuizMutation } from '../features/quizzes/hooks/useQuizzesHooks';
 import { useNavigate } from 'react-router-dom';
 
 const CreateQuiz = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const { mutate: createQuiz, isPending } = useCreateQuizMutation();
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createQuiz(
-      { title, description, isPublic: true },
+      { title, description, thumbnailUrl, isPublic: true },
       { onSuccess: () => navigate('/dashboard') }
     );
   };
@@ -54,6 +55,28 @@ const CreateQuiz = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Input
+                  icon={ImageIcon}
+                  label="URL del Banner (Opcional)"
+                  placeholder="https://ejemplo.com/banner.jpg"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                />
+                {thumbnailUrl && (
+                  <div className="mt-2 rounded-2xl overflow-hidden border-2 border-border relative h-40">
+                    <img 
+                      src={thumbnailUrl} 
+                      alt="Banner Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Error+al+cargar+imagen';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 flex justify-end">
