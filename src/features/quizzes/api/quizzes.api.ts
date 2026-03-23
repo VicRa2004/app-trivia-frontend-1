@@ -25,3 +25,8 @@ export const createQuestionFn = async ({ quizId, data }: { quizId: string, data:
   const response = await api.post<QuizQuestion>(`/quizzes/${quizId}/questions`, data);
   return response.data;
 };
+
+export const getMyQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedResponse<Quiz>> => {
+  const response = await api.get<PaginatedResponse<Quiz>>(`/quizzes/my-quizzes?page=${page}&limit=${limit}`);
+  return response.data;
+};

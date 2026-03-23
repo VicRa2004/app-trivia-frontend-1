@@ -36,14 +36,20 @@ export const HostView = ({
      };
   }, [status, currentQuestion, onShowAnswer]);
 
+  const [showRanking, setShowRanking] = useState(false);
+
+  if (status !== 'revealed' && showRanking) {
+     setShowRanking(false);
+  }
+
   useEffect(() => {
      if (status === 'revealed') {
         const to = setTimeout(() => {
-           onNextQuestion();
-        }, 7000);
+           setShowRanking(true);
+        }, 5000);
         return () => clearTimeout(to);
      }
-  }, [status, onNextQuestion]);
+  }, [status]);
 
   if (status === 'finished') {
     return (
@@ -54,14 +60,14 @@ export const HostView = ({
              <div key={i} className={`flex flex-col items-center animate-in Math.max(slide-in-from-bottom-${(3-i)*10}, slide-in-from-bottom-10) duration-700`}>
                  <div className="font-extrabold text-3xl mb-2 text-text-main">{p.username}</div>
                  <div className="font-bold text-xl text-primary mb-4 bg-primary/10 px-4 py-1 rounded-full">{p.score} pts</div>
-                 <div className={`w-36 rounded-t-[2rem] bg-primary shadow-2xl flex items-start justify-center pt-8 text-white text-6xl font-extrabold transition-all`} style={{ height: `${(3 - i) * 140}px`, opacity: i === 0 ? 1 : 0.85 }}>
+                 <div className={`w-36 rounded-t-4xl bg-primary shadow-2xl flex items-start justify-center pt-8 text-white text-6xl font-extrabold transition-all`} style={{ height: `${(3 - i) * 140}px`, opacity: i === 0 ? 1 : 0.85 }}>
                    {i + 1}
                  </div>
              </div>
            ))}
          </div>
          <div className="mt-12">
-            <Button onClick={() => window.location.href = '/dashboard'} className="bg-[#7f0df2] hover:bg-[#6c0ac0] text-white px-8 py-4 rounded-3xl font-extrabold text-2xl shadow-xl transition-all">
+            <Button onClick={() => window.location.href = '/dashboard'} className="bg-primary hover:bg-[#6c0ac0] text-white px-8 py-4 rounded-3xl font-extrabold text-2xl shadow-xl transition-all">
                Volver al Dashboard
             </Button>
          </div>
@@ -77,7 +83,7 @@ export const HostView = ({
          </span>
          
          {status === 'playing' && currentQuestion && (
-            <div className="flex-1 mx-8 h-4 bg-border/50 rounded-full overflow-hidden shadow-inner hidden md:block">
+            <div className="flex-1 mx-2 md:mx-8 h-4 bg-border/50 rounded-full overflow-hidden shadow-inner">
                <div 
                   className={`h-full rounded-full transition-all duration-100 ease-linear ${timeLeft < 25 ? 'bg-red-500 animate-[pulse_0.5s_ease-in-out_infinite]' : 'bg-primary'}`}
                   style={{ width: `${timeLeft}%` }}
@@ -104,7 +110,7 @@ export const HostView = ({
                <img src={currentQuestion.imageUrl} alt="Background" className="w-full h-full object-cover blur-md scale-105" />
              </div>
           )}
-          <h2 className="text-4xl md:text-6xl font-extrabold leading-tight text-text-main relative z-10 drop-shadow-sm">
+          <h2 className="text-2xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-text-main relative z-10 drop-shadow-sm">
             {currentQuestion?.text || "Esperando para comenzar la partida..."}
           </h2>
           {currentQuestion?.imageUrl && (
@@ -112,29 +118,31 @@ export const HostView = ({
           )}
        </Card>
 
-       <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-6 px-2`}>
-          {currentQuestion?.options.map((opt, i) => {
-            const isCorrect = useGameStore.getState().correctOptions.includes(opt.id);
-            const isRevealed = status === 'revealed';
-            let opacity = 'opacity-100';
-            if (isRevealed && !isCorrect) opacity = 'opacity-30';
+       {!showRanking && (
+         <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 md:gap-6 px-2`}>
+            {currentQuestion?.options.map((opt, i) => {
+              const isCorrect = useGameStore.getState().correctOptions.includes(opt.id);
+              const isRevealed = status === 'revealed';
+              let opacity = 'opacity-100';
+              if (isRevealed && !isCorrect) opacity = 'opacity-30';
 
-            return (
-              <div key={opt.id} className={`flex ${currentQuestion.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[120px] rounded-[2rem] ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-6 gap-6`}>
-                 {currentQuestion.type === 'ordering' && (
-                    <div className="w-14 h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-3xl shadow-inner border border-white/50">
-                       {opt.position || i + 1}
-                    </div>
-                 )}
-                 {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-20 w-20 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
-                 <span className={`text-white font-extrabold ${currentQuestion.type === 'ordering' ? 'text-3xl text-left flex-1' : 'text-3xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
-                 {isRevealed && isCorrect && <CheckCircle2 className="text-white w-12 h-12 ml-auto" />}
-              </div>
-            );
-          })}
-       </div>
+              return (
+                <div key={opt.id} className={`flex ${currentQuestion.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
+                   {currentQuestion.type === 'ordering' && (
+                      <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
+                         {opt.position || i + 1}
+                      </div>
+                   )}
+                   {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
+                   <span className={`text-white font-extrabold ${currentQuestion.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
+                   {isRevealed && isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
+                </div>
+              );
+            })}
+         </div>
+       )}
 
-       {status === 'revealed' && (
+       {status === 'revealed' && showRanking && (
          <Card className="mt-12 rounded-[3rem] shadow-2xl border-none animate-in slide-in-from-bottom-8">
            <CardHeader className="bg-primary/10 rounded-t-[3rem] border-b border-primary/10 pb-4 pt-8">
              <CardTitle className="text-primary text-3xl font-extrabold px-4">Top 5 Parcial</CardTitle>

@@ -3,13 +3,28 @@ import { useGameStore } from '../store/useGameStore';
 import { Trophy, CheckCircle2, AlertTriangle, Send } from 'lucide-react';
 
 export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: string | string[], ms: number) => void }) => {
-  const { currentQuestion, playerScore, status, answerError } = useGameStore();
+  const { currentQuestion, playerScore, status, answerError, correctOptions } = useGameStore();
   
   const [interaction, setInteraction] = useState<{ qId?: string | null, payloadSent: boolean, startedAt: number }>({
     qId: currentQuestion?.id,
     payloadSent: false,
     startedAt: new Date().getTime(),
   });
+
+  const [showResultScreen, setShowResultScreen] = useState(false);
+
+  if (status !== 'revealed' && showResultScreen) {
+     setShowResultScreen(false);
+  }
+
+  useEffect(() => {
+     if (status === 'revealed') {
+        const to = setTimeout(() => {
+           setShowResultScreen(true);
+        }, 5000);
+        return () => clearTimeout(to);
+     }
+  }, [status]);
 
   const [textAnswer, setTextAnswer] = useState('');
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
@@ -75,13 +90,13 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
      );
   }
 
-  if (status === 'revealed') {
+  if (status === 'revealed' && showResultScreen) {
     const isCorrect = true; // El servidor ya sumó puntos si es correcto, aquí solo mostramos fin del tiempo
     return (
        <div className={`flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 ${isCorrect ? 'bg-green-500' : 'bg-red-500'} rounded-4xl p-6 shadow-2xl`}>
           <CheckCircle2 className="w-32 h-32 mb-6" />
-          <h1 className="text-5xl font-extrabold mb-4 text-center">¡Tiempo Agotado!</h1>
-          <div className="flex items-center gap-2 text-2xl font-bold bg-white/20 px-6 py-3 rounded-full mt-4 shadow-sm">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-center">¡Tiempo Agotado!</h1>
+          <div className="flex items-center gap-2 text-xl md:text-2xl font-bold bg-white/20 px-6 py-3 rounded-full mt-4 shadow-sm">
             <Trophy /> Puntuación Total: {playerScore}
           </div>
        </div>
@@ -195,9 +210,9 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
                 key={opt.id}
                 disabled={interaction.payloadSent}
                 onClick={() => handleSubmit(opt.id)}
-                className={`w-full min-h-[160px] flex flex-col items-center justify-center rounded-4xl shadow-xl transition-all duration-200 ${optionColors[i % 4]} text-white text-3xl font-extrabold hover:brightness-110 active:scale-95 disabled:scale-100 ${interaction.payloadSent ? 'opacity-40 grayscale-[0.5]' : ''}`}
+                className={`w-full min-h-[100px] md:min-h-[160px] flex flex-col items-center justify-center rounded-4xl shadow-xl transition-all duration-200 ${optionColors[i % 4]} text-white text-xl md:text-3xl font-extrabold hover:brightness-110 active:scale-95 disabled:scale-100 ${interaction.payloadSent ? 'opacity-40 grayscale-[0.5]' : ''}`}
              >
-                {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-32 max-w-full object-cover mb-4 rounded-xl shadow-lg border-4 border-white/20" />}
+                {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-20 md:h-32 max-w-full object-cover mb-2 md:mb-4 rounded-xl shadow-lg border-4 border-white/20" />}
                 <span className="drop-shadow-md px-4">{opt.content}</span>
              </button>
            ))}
@@ -224,12 +239,35 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
        )}
 
        {currentQuestion && (
-          <div className="text-center font-extrabold text-2xl text-text-main my-2 px-4 shadow-sm bg-surface rounded-2xl py-4 border border-border">
+          <div className="text-center font-extrabold text-xl md:text-2xl text-text-main my-2 px-4 shadow-sm bg-surface rounded-2xl py-4 border border-border">
              {currentQuestion.text}
           </div>
        )}
 
-       {renderQuestionType()}
+       {status === 'revealed' && !showResultScreen ? (
+          <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 md:gap-6 px-2 mt-4`}>
+             {currentQuestion?.options.map((opt, i) => {
+               const isCorrect = correctOptions.includes(opt.id);
+               let opacity = 'opacity-30';
+               if (isCorrect) opacity = 'opacity-100';
+
+               return (
+                 <div key={opt.id} className={`flex ${currentQuestion?.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
+                    {currentQuestion?.type === 'ordering' && (
+                       <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
+                          {opt.position || i + 1}
+                       </div>
+                    )}
+                    {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
+                    <span className={`text-white font-extrabold ${currentQuestion?.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
+                    {isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
+                 </div>
+               );
+             })}
+          </div>
+       ) : (
+          renderQuestionType()
+       )}
     </div>
   );
 };
