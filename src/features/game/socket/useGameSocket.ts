@@ -14,6 +14,7 @@ export const useGameSocket = (gamePin: string | null) => {
   const setPlayerScore = useGameStore(state => state.setPlayerScore);
   const setRevealed = useGameStore(state => state.setRevealed);
   const setFinished = useGameStore(state => state.setFinished);
+  const setAnswerError = useGameStore(state => state.setAnswerError);
 
   useEffect(() => {
     if (!gamePin || !token) return;
@@ -48,6 +49,9 @@ export const useGameSocket = (gamePin: string | null) => {
     socket.on('answer_received', (payload) => {
       if (payload.success) {
         setPlayerScore(payload.newScore);
+        setAnswerError(null);
+      } else {
+        setAnswerError(payload.message || 'Demasiado tarde, cupo de ganadores lleno');
       }
     });
 
@@ -66,10 +70,10 @@ export const useGameSocket = (gamePin: string | null) => {
     return () => {
       socket.disconnect();
     };
-  }, [gamePin, token, setPlayers, setStatus, setNewQuestion, setPlayerScore, setRevealed, setFinished]);
+  }, [gamePin, token, setPlayers, setStatus, setNewQuestion, setPlayerScore, setRevealed, setFinished, setAnswerError]);
 
   const emitNextQuestion = () => socketRef.current?.emit('next_question', { gamePin, token });
-  const emitSubmitAnswer = (optionId: string, timeElapsedMs: number) => socketRef.current?.emit('submit_answer', { gamePin, token, optionId, timeElapsedMs });
+  const emitSubmitAnswer = (answerPayload: string | string[], timeElapsedMs: number) => socketRef.current?.emit('submit_answer', { gamePin, token, answerPayload, timeElapsedMs });
   const emitShowCorrectAnswer = () => socketRef.current?.emit('show_correct_answer', { gamePin, token });
   const emitFinishGame = () => socketRef.current?.emit('finish_game', { gamePin, token });
   const emitStartGame = () => socketRef.current?.emit('start_game', { gamePin, token });

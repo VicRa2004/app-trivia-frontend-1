@@ -9,12 +9,15 @@ export interface GamePlayer {
 export interface GameOption {
   id: string;
   content: string;
+  imageUrl?: string;
+  position?: number;
 }
 
 export interface GameQuestion {
   id: string;
   text: string;
   type: string;
+  imageUrl?: string;
   points: number;
   timeLimit: number;
   options: GameOption[];
@@ -31,7 +34,7 @@ interface GameState {
   correctOptions: string[];
   podium: GamePlayer[];
   playerScore: number;
-  
+  answerError: string | null;
   // Acciones
   setGamePin: (pin: string, isHost?: boolean) => void;
   setStatus: (status: GameState['status']) => void;
@@ -40,6 +43,7 @@ interface GameState {
   setRevealed: (correctOptions: string[], ranking: GamePlayer[]) => void;
   setFinished: (podium: GamePlayer[]) => void;
   setPlayerScore: (score: number) => void;
+  setAnswerError: (error: string | null) => void;
   resetGame: () => void;
 }
 
@@ -54,6 +58,7 @@ export const useGameStore = create<GameState>((set) => ({
   correctOptions: [],
   podium: [],
   playerScore: 0,
+  answerError: null,
 
   setGamePin: (pin, isHost = false) => set({ gamePin: pin, isHost }),
   setStatus: (status) => set({ status }),
@@ -72,9 +77,10 @@ export const useGameStore = create<GameState>((set) => ({
   }),
   setFinished: (podium) => set({ podium, status: 'finished' }),
   setPlayerScore: (score) => set({ playerScore: score }),
+  setAnswerError: (error) => set({ answerError: error }),
   resetGame: () => set({
     gamePin: null, isHost: false, status: 'lobby', players: [],
     currentQuestion: null, questionIndex: 0, questionTotal: 0,
-    correctOptions: [], podium: [], playerScore: 0
+    correctOptions: [], podium: [], playerScore: 0, answerError: null
   })
 }));

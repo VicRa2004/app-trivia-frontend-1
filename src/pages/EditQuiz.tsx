@@ -3,49 +3,89 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Button } from '../components/Button';
-import { Loader2, Plus, GripVertical, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, GripVertical, CheckCircle2, Image as ImageIcon, Edit2, X } from 'lucide-react';
 import { useQuizByIdQuery, useCreateQuestionMutation } from '../features/quizzes/hooks/useQuizzesHooks';
+import type { QuizQuestion } from '../features/quizzes/types';
 
 const EditQuiz = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: quiz, isLoading, isError } = useQuizByIdQuery(id!);
-  const { mutate: createQuestion, isPending: isSaving } = useCreateQuestionMutation();
+  const { mutate: saveQuestion, isPending: isSaving } = useCreateQuestionMutation();
 
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [questionType, setQuestionType] = useState('multiple_choice');
   const [options, setOptions] = useState([
-    { content: '', isCorrect: true, position: 1 },
-    { content: '', isCorrect: false, position: 2 },
-    { content: '', isCorrect: false, position: 3 },
-    { content: '', isCorrect: false, position: 4 },
+    { content: '', imageUrl: '', isCorrect: true, position: 1 },
+    { content: '', imageUrl: '', isCorrect: false, position: 2 },
+    { content: '', imageUrl: '', isCorrect: false, position: 3 },
+    { content: '', imageUrl: '', isCorrect: false, position: 4 },
   ]);
 
-  const handleCreateQuestion = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingQuestionId(null);
+    setQuestionText('');
+    setImageUrl('');
+    setQuestionType('multiple_choice');
+    setOptions([
+       { content: '', imageUrl: '', isCorrect: true, position: 1 },
+       { content: '', imageUrl: '', isCorrect: false, position: 2 },
+       { content: '', imageUrl: '', isCorrect: false, position: 3 },
+       { content: '', imageUrl: '', isCorrect: false, position: 4 },
+    ]);
+  };
+
+  const handleEditClick = (q: QuizQuestion) => {
+    setEditingQuestionId(q.id || null);
+    setQuestionText(q.questionText || '');
+    setImageUrl(q.imageUrl || '');
+    setQuestionType(q.questionType || 'multiple_choice');
+    
+    // Ensure 4 options exist for the form
+    const mappedOptions = [...(q.options || [])];
+    while (mappedOptions.length < 4) {
+      mappedOptions.push({ content: '', imageUrl: '', isCorrect: false, position: mappedOptions.length + 1 });
+    }
+    setOptions(mappedOptions.slice(0, 4).map((o, idx) => ({
+       content: o.content || '',
+       imageUrl: o.imageUrl || '',
+       isCorrect: o.isCorrect || false,
+       position: o.position || idx + 1
+    })));
+  };
+
+  const handleSaveQuestion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
 
-    createQuestion(
+    saveQuestion(
       {
         quizId: id,
         data: {
+          id: editingQuestionId || undefined,
           questionText,
-          questionType: 'multiple_choice',
+          imageUrl: imageUrl || undefined,
+          questionType,
           points: 1000,
           timeLimit: 20,
           orderNumber: (quiz?.questions?.length || 0) + 1,
-          options,
+          options: options
+             .filter(opt => questionType !== 'short_answer' || opt.content.trim() !== '')
+             .map((opt, i) => ({
+             ...opt,
+             content: questionType === 'image_choice' ? `Imagen ${i + 1}` : opt.content,
+             isCorrect: questionType === 'short_answer' ? true : opt.isCorrect,
+             position: i + 1,
+             imageUrl: opt.imageUrl ? opt.imageUrl : undefined
+          })),
         },
       },
       {
          onSuccess: () => {
-            setQuestionText('');
-            setOptions([
-               { content: '', isCorrect: true, position: 1 },
-               { content: '', isCorrect: false, position: 2 },
-               { content: '', isCorrect: false, position: 3 },
-               { content: '', isCorrect: false, position: 4 },
-            ]);
-            alert('¡Pregunta añadida con éxito!');
+            resetForm();
+            alert(editingQuestionId ? '¡Pregunta actualizada con éxito!' : '¡Pregunta añadida con éxito!');
          }
       }
     );
@@ -57,6 +97,10 @@ const EditQuiz = () => {
 
   const changeOptionText = (index: number, val: string) => {
     setOptions(opts => opts.map((o, i) => i === index ? { ...o, content: val } : o));
+  };
+
+  const changeOptionImage = (index: number, val: string) => {
+    setOptions(opts => opts.map((o, i) => i === index ? { ...o, imageUrl: val } : o));
   };
 
   if (isLoading) return <Layout><div className="flex justify-center p-20"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div></Layout>;
@@ -74,11 +118,18 @@ const EditQuiz = () => {
                </CardHeader>
                <CardContent className="flex flex-col gap-3">
                   {quiz.questions?.map((q, i) => (
-                    <div key={q.id} className="p-3 bg-surface border rounded-xl flex items-start gap-3 shadow-sm group">
+                    <div 
+                       key={q.id} 
+                       className={`p-3 bg-surface border-2 rounded-xl flex items-start gap-3 shadow-sm group cursor-pointer transition-all ${editingQuestionId === q.id ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-border hover:border-primary/30'}`}
+                       onClick={() => handleEditClick(q)}
+                    >
                        <GripVertical className="text-border group-hover:text-text-muted mt-1" size={20}/>
-                       <div>
-                         <div className="text-xs font-bold text-primary mb-1">Pregunta {i + 1}</div>
-                         <div className="text-sm font-semibold line-clamp-2">{q.questionText}</div>
+                       <div className="flex-1">
+                         <div className="text-xs font-bold text-primary mb-1 flex justify-between items-center">
+                            <span>Pregunta {i + 1}</span>
+                            <Edit2 size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                         </div>
+                         <div className="text-sm font-semibold line-clamp-2 text-text-main">{q.questionText}</div>
                        </div>
                     </div>
                   ))}
@@ -94,14 +145,19 @@ const EditQuiz = () => {
          
          {/* Contenido Principal: Formulario añadir pregunta */}
          <div className="w-full md:w-2/3">
-            <Card className="border-4 border-transparent focus-within:border-primary/20 transition-all duration-300">
-              <CardHeader className="bg-primary/5 border-b mb-6 rounded-t-2xl">
-                <CardTitle className="text-2xl text-primary font-extrabold flex items-center gap-2">
-                   <Plus /> Añadir Nueva Pregunta
+            <Card className={`border-4 transition-all duration-300 ${editingQuestionId ? 'border-yellow-400 focus-within:border-yellow-500' : 'border-transparent focus-within:border-primary/20'}`}>
+              <CardHeader className={`${editingQuestionId ? 'bg-yellow-50' : 'bg-primary/5'} border-b mb-6 rounded-t-2xl flex flex-row items-center justify-between`}>
+                <CardTitle className={`text-2xl ${editingQuestionId ? 'text-yellow-700' : 'text-primary'} font-extrabold flex items-center gap-2`}>
+                   {editingQuestionId ? <><Edit2 /> Editar Pregunta</> : <><Plus /> Añadir Nueva Pregunta</>}
                 </CardTitle>
+                {editingQuestionId && (
+                   <button onClick={resetForm} className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-full transition-colors flex items-center gap-2 font-bold text-sm">
+                      <X size={16} /> Cancelar Edición
+                   </button>
+                )}
               </CardHeader>
               <CardContent>
-                 <form onSubmit={handleCreateQuestion} className="flex flex-col gap-6">
+                 <form onSubmit={handleSaveQuestion} className="flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
                       <label className="font-bold text-text-main text-lg">Escribe tu pregunta</label>
                       <textarea
@@ -113,31 +169,90 @@ const EditQuiz = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                       <div className="flex flex-col gap-1">
+                          <label className="text-sm font-bold text-text-main">Tipo de Pregunta</label>
+                          <select 
+                            value={questionType}
+                            onChange={(e) => setQuestionType(e.target.value)}
+                            className="p-3 bg-surface border-2 border-border rounded-2xl outline-none focus:border-primary transition-all text-text-main font-semibold"
+                          >
+                             <option value="multiple_choice">Opción Múltiple</option>
+                             <option value="image_choice">Selección de Imagen</option>
+                             <option value="short_answer">Respuesta Corta</option>
+                             <option value="ordering">Ordenamiento</option>
+                          </select>
+                       </div>
+                       <div className="flex flex-col gap-1">
+                          <label className="text-sm font-bold text-text-main">URL Imagen de Apoyo (Opcional)</label>
+                          <input 
+                            type="text"
+                            placeholder="https://ejemplo.com/img.jpg"
+                            value={imageUrl}
+                            onChange={(e) => setImageUrl(e.target.value)}
+                            className="p-3 bg-surface border-2 border-border rounded-2xl outline-none focus:border-primary transition-all text-text-main"
+                          />
+                       </div>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-6">
+                      <label className="font-bold text-text-main text-lg">Opciones de Respuesta</label>
+                      {questionType === 'ordering' && <span className="text-sm text-primary font-semibold bg-primary/10 px-3 py-1 rounded-full">Coloca las opciones en orden del 1 al 4</span>}
+                      {questionType === 'short_answer' && <span className="text-sm text-green-700 font-semibold bg-green-500/10 px-3 py-1 rounded-full">Aceptadas como correctas</span>}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 mt-2">
                        {options.map((opt, i) => (
-                         <div key={i} className={`flex items-center gap-3 p-2 rounded-2xl border-2 transition-all ${opt.isCorrect ? 'border-green-500 bg-green-500/10' : 'border-border bg-surface'}`}>
-                            <button 
-                               type="button" 
-                               onClick={() => setCorrectOption(i)}
-                               className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full transition-all ${opt.isCorrect ? 'bg-green-500 text-white shadow-lg scale-110' : 'bg-transparent border-2 border-border text-border hover:border-text-muted hover:text-text-muted'}`}
-                            >
-                               {opt.isCorrect && <CheckCircle2 size={24} />}
-                            </button>
-                            <input
-                              type="text"
-                              className="w-full bg-transparent outline-none font-bold text-lg placeholder:font-normal placeholder:text-sm text-text-main"
-                              placeholder={`Opción ${i+1}`}
-                              value={opt.content}
-                              onChange={(e) => changeOptionText(i, e.target.value)}
-                              required={i < 2} // Exige al menos 2
-                            />
+                         <div key={i} className={`flex flex-col gap-2 p-3 rounded-2xl border-2 transition-all ${(opt.isCorrect && questionType !== 'ordering' && questionType !== 'short_answer') || questionType === 'short_answer' ? 'border-green-500 bg-green-500/10' : 'border-border bg-surface'}`}>
+                            <div className="flex items-center gap-3">
+                               {questionType !== 'ordering' && questionType !== 'short_answer' && (
+                                 <button 
+                                   type="button" 
+                                   onClick={() => setCorrectOption(i)}
+                                   className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full transition-all ${opt.isCorrect ? 'bg-green-500 text-white shadow-md scale-105' : 'bg-transparent border-2 border-border text-border hover:border-text-muted hover:text-text-muted'}`}
+                                 >
+                                    {opt.isCorrect && <CheckCircle2 size={24} />}
+                                 </button>
+                               )}
+                               {questionType === 'ordering' && (
+                                 <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-primary/10 text-primary font-extrabold shadow-sm border border-primary/20">
+                                   {i + 1}
+                                 </div>
+                               )}
+                               {questionType === 'short_answer' && (
+                                  <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-green-500 text-white shadow-md border border-green-600">
+                                     <CheckCircle2 size={24} />
+                                  </div>
+                               )}
+                               {questionType !== 'image_choice' && (
+                                 <input
+                                   type="text"
+                                   className="w-full bg-transparent outline-none font-bold text-lg placeholder:font-normal placeholder:text-sm text-text-main"
+                                   placeholder={questionType === 'short_answer' ? `Respuesta válida ${i+1}${i > 0 ? ' (Opcional)' : ''}` : `Texto de Opción ${i+1}`}
+                                   value={opt.content}
+                                   onChange={(e) => changeOptionText(i, e.target.value)}
+                                   required={(i < 2 && questionType !== 'short_answer' && questionType !== 'image_choice') || (i === 0 && questionType === 'short_answer') || questionType === 'ordering'}
+                                 />
+                               )}
+                            </div>
+                            <div className="flex items-center gap-2 pl-[3.25rem] pr-2 mt-1">
+                               <ImageIcon size={16} className="text-text-muted" />
+                               <input
+                                 type="text"
+                                 className="w-full bg-transparent outline-none text-sm placeholder:text-text-muted/60 text-text-muted"
+                                 placeholder={questionType === 'image_choice' ? "URL de Imagen (Requerida)" : "URL de Imagen (Opcional)"}
+                                 value={opt.imageUrl || ''}
+                                 onChange={(e) => changeOptionImage(i, e.target.value)}
+                                 required={questionType === 'image_choice' && i < 2}
+                               />
+                            </div>
                          </div>
                        ))}
                     </div>
                     
                     <div className="flex justify-end pt-6 mt-4 border-t">
-                      <Button type="submit" isLoading={isSaving} className="text-lg px-8 py-6 shadow-xl shadow-primary/30">
-                        Guardar Pregunta
+                      <Button type="submit" isLoading={isSaving} className={`text-lg px-8 py-6 shadow-xl ${editingQuestionId ? 'bg-yellow-500 hover:bg-yellow-600 shadow-yellow-500/30 text-yellow-950' : 'shadow-primary/30'}`}>
+                        {editingQuestionId ? 'Guardar Cambios' : 'Guardar Pregunta'}
                       </Button>
                     </div>
                  </form>

@@ -1,6 +1,7 @@
 export interface QuestionOption {
   id?: string;
   content: string;
+  imageUrl?: string;
   isCorrect: boolean;
   position: number;
 }
@@ -8,6 +9,7 @@ export interface QuestionOption {
 export interface QuizQuestion {
   id?: string;
   questionText: string;
+  imageUrl?: string;
   questionType: string;
   points: number;
   timeLimit: number;
@@ -52,13 +54,16 @@ export interface CreateQuizData {
 }
 
 export interface CreateQuestionData {
+  id?: string;
   questionText: string;
+  imageUrl?: string;
   questionType: string;
   points: number;
   timeLimit: number;
   orderNumber: number;
   options: {
     content: string;
+    imageUrl?: string;
     isCorrect: boolean;
     position: number;
   }[];
