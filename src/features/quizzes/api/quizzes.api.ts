@@ -30,3 +30,7 @@ export const getMyQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedRes
   const response = await api.get<PaginatedResponse<Quiz>>(`/quizzes/my-quizzes?page=${page}&limit=${limit}`);
   return response.data;
 };
+
+export const deleteQuizFn = async (quizId: string): Promise<void> => {
+  await api.delete(`/quizzes/${quizId}`);
+};

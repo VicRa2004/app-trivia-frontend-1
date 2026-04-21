@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getQuizzesFn, getMyQuizzesFn, createQuizFn, getQuizByIdFn, createQuestionFn, updateQuizFn } from '../api/quizzes.api';
+import { getQuizzesFn, getMyQuizzesFn, createQuizFn, getQuizByIdFn, createQuestionFn, updateQuizFn, deleteQuizFn } from '../api/quizzes.api';
 import { useNavigate } from 'react-router-dom';
 
 export const useQuizzesQuery = (page = 1, limit = 10) => {
@@ -45,6 +45,7 @@ export const useUpdateQuizMutation = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['quizzes', data.id] });
       queryClient.invalidateQueries({ queryKey: ['quizzes'] });
+      queryClient.invalidateQueries({ queryKey: ['my-quizzes'] });
     },
   });
 };
@@ -57,6 +58,20 @@ export const useCreateQuestionMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['quizzes', variables.quizId] });
       queryClient.invalidateQueries({ queryKey: ['quizzes'] });
+    },
+  });
+};
+
+export const useDeleteQuizMutation = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: deleteQuizFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quizzes'] });
+      queryClient.invalidateQueries({ queryKey: ['my-quizzes'] });
+      navigate('/dashboard');
     },
   });
 };

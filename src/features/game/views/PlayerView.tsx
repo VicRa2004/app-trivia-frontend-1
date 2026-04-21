@@ -91,11 +91,17 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
   }
 
   if (status === 'revealed' && showResultScreen) {
-    const isCorrect = true; // El servidor ya sumó puntos si es correcto, aquí solo mostramos fin del tiempo
+    const isCorrect = true; // El servidor ya summing puntos si es correcto, aquí solo mostramos fin del tiempo
     return (
        <div className={`flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 ${isCorrect ? 'bg-green-500' : 'bg-red-500'} rounded-4xl p-6 shadow-2xl`}>
           <CheckCircle2 className="w-32 h-32 mb-6" />
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-center">¡Tiempo Agotado!</h1>
+          {currentQuestion?.type === 'short_answer' && (
+            <div className="mt-4 bg-white/20 rounded-2xl p-6 text-center">
+              <p className="text-lg font-bold mb-2">Respuesta correcta:</p>
+              <p className="text-2xl md:text-3xl font-extrabold">{currentQuestion.options.find(o => useGameStore.getState().correctOptions.includes(o.id))?.content || 'No disponible'}</p>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xl md:text-2xl font-bold bg-white/20 px-6 py-3 rounded-full mt-4 shadow-sm">
             <Trophy /> Puntuación Total: {playerScore}
           </div>

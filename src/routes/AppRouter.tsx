@@ -6,6 +6,7 @@ import Dashboard from '../pages/Dashboard';
 import CreateQuiz from '../pages/CreateQuiz';
 import EditQuiz from '../pages/EditQuiz';
 import GameRoom from '../pages/GameRoom';
+import Profile from '../pages/Profile';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useAuthStore((state) => state.token);
@@ -40,6 +41,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <CreateQuiz />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <ProtectedRoute>
+        <Profile />
       </ProtectedRoute>
     ),
   },

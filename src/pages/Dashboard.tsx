@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { PlusCircle, Loader2, Play, Users, Send, Lock } from 'lucide-react';
-import { useQuizzesQuery, useMyQuizzesQuery } from '../features/quizzes/hooks/useQuizzesHooks';
+import { PlusCircle, Loader2, Play, Users, Send, Lock, Trash2 } from 'lucide-react';
+import { useQuizzesQuery, useMyQuizzesQuery, useDeleteQuizMutation } from '../features/quizzes/hooks/useQuizzesHooks';
 import { useNavigate } from 'react-router-dom';
 import type { Quiz } from '../features/quizzes/types';
 import { useCreateGameSessionMutation } from '../features/game/hooks/useGameApiHooks';
@@ -13,12 +13,20 @@ const Dashboard = () => {
   const { data: myData, isLoading: isMyLoading, isError: isMyError } = useMyQuizzesQuery(1, 10);
   const { data: publicData, isLoading: isPublicLoading, isError: isPublicError } = useQuizzesQuery(1, 10);
   const { mutate: createGame, isPending } = useCreateGameSessionMutation();
+  const deleteMutation = useDeleteQuizMutation();
   const [pinInput, setPinInput] = useState('');
 
   const handleJoinGame = (e: React.FormEvent) => {
     e.preventDefault();
     if (pinInput.trim().length > 0) {
       navigate(`/game/${pinInput.trim()}`);
+    }
+  };
+
+  const handleDeleteQuiz = (e: React.MouseEvent, quizId: string) => {
+    e.stopPropagation();
+    if (confirm('¿Estás seguro de eliminar este quiz? Esta acción no se puede deshacer.')) {
+      deleteMutation.mutate(quizId);
     }
   };
 
@@ -51,36 +59,45 @@ const Dashboard = () => {
             {q.description}
          </p>
          
-         <div className="flex gap-2 mt-auto">
-             <Button 
-               icon={Play} 
-               className="flex-1 text-sm h-10 shadow-primary-light shadow-md"
-               onClick={() => {
-                 createGame(q.id, {
-                   onError: (err: unknown) => {
-                     let msg = 'Error del servidor: Posiblemente el Quiz no tiene preguntas.';
-                     const e = err as { response?: { data?: { message?: string } } };
-                     if (e?.response?.data?.message) {
-                       msg = String(e.response.data.message);
-                     }
-                     alert(msg);
-                   }
-                 })
-               }}
-               disabled={isPending}
-             >
-               Iniciar Partida
-             </Button>
-             {isMine && (
-               <Button 
-                 variant="outline" 
-                 className="px-4 text-sm h-10 border-border text-text-muted hover:text-primary shrink-0 flex items-center justify-center"
-                 onClick={() => navigate(`/dashboard/quiz/${q.id}/edit`)}
-               >
-                 Editar
-               </Button>
-             )}
-         </div>
+<div className="flex gap-2 mt-auto">
+              <Button
+                icon={Play}
+                className="flex-1 text-sm h-10 shadow-primary-light shadow-md"
+                onClick={() => {
+                  createGame(q.id, {
+                    onError: (err: unknown) => {
+                      let msg = 'Error del servidor: Posiblemente el Quiz no tiene preguntas.';
+                      const e = err as { response?: { data?: { message?: string } } };
+                      if (e?.response?.data?.message) {
+                        msg = String(e.response.data.message);
+                      }
+                      alert(msg);
+                    }
+                  })
+                }}
+                disabled={isPending}
+              >
+                Iniciar Partida
+              </Button>
+              {isMine && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="px-4 text-sm h-10 border-border text-text-muted hover:text-red-500 shrink-0 flex items-center justify-center"
+                    onClick={(e) => handleDeleteQuiz(e, q.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="px-4 text-sm h-10 border-border text-text-muted hover:text-primary shrink-0 flex items-center justify-center"
+                    onClick={() => navigate(`/dashboard/quiz/${q.id}/edit`)}
+                  >
+                    Editar
+                  </Button>
+                </>
+              )}
+          </div>
       </div>
     </Card>
   );

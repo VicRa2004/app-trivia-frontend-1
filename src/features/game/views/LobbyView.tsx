@@ -1,7 +1,7 @@
 import { useGameStore } from '../store/useGameStore';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
-import { Users, Play } from 'lucide-react';
+import { Users, Play, User } from 'lucide-react';
 
 export const LobbyView = ({ onStart }: { onStart: () => void }) => {
   const { gamePin, players, isHost } = useGameStore();
@@ -26,8 +26,18 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
 
       <div className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {players.map((p, i) => (
-          <div key={i} className="bg-primary hover:bg-primary-hover hover:-translate-y-1 transition text-white px-4 py-3 rounded-2xl font-bold text-lg text-center shadow-md">
-            {p.username}
+          <div
+            key={i}
+            className="bg-primary hover:bg-primary-hover hover:-translate-y-1 transition text-white px-4 py-4 rounded-2xl font-bold text-center shadow-md flex flex-col items-center gap-2"
+          >
+            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30 shadow-inner">
+              {p.avatarUrl ? (
+                <img src={p.avatarUrl} alt={p.username} className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-7 h-7" />
+              )}
+            </div>
+            <span className="text-sm truncate w-full">{p.username}</span>
           </div>
         ))}
         {players.length === 0 && (

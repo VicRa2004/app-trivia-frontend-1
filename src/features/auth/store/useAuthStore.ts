@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface Avatar {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
+
 export interface User {
   id: string;
   username: string;
   email: string;
   fullName?: string;
+  avatar?: Avatar;
 }
 
 interface AuthState {

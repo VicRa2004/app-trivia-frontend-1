@@ -4,6 +4,8 @@ export interface GamePlayer {
   userId?: string;
   username: string;
   score: number;
+  avatarUrl?: string;
+  avatarName?: string;
 }
 
 export interface GameOption {

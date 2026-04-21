@@ -104,45 +104,87 @@ export const HostView = ({
          </div>
        </div>
 
-       <Card className="text-center p-10 md:p-16 mb-10 shadow-2xl border-none rounded-[3rem] bg-surface relative overflow-hidden">
-          {currentQuestion?.imageUrl && (
-             <div className="absolute inset-0 z-0 opacity-10">
-               <img src={currentQuestion.imageUrl} alt="Background" className="w-full h-full object-cover blur-md scale-105" />
-             </div>
-          )}
-          <h2 className="text-2xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-text-main relative z-10 drop-shadow-sm">
-            {currentQuestion?.text || "Esperando para comenzar la partida..."}
-          </h2>
-          {currentQuestion?.imageUrl && (
-             <img src={currentQuestion.imageUrl} className="max-h-80 object-contain mx-auto mt-8 rounded-3xl relative z-10 shadow-2xl border-8 border-white" alt="Question" />
-          )}
-       </Card>
+        <div className={`flex flex-col lg:flex-row gap-6 mb-8`}>
+           <Card className="text-center p-8 lg:p-12 shadow-2xl border-none rounded-[2rem] bg-surface relative overflow-hidden flex-1">
+              {currentQuestion?.imageUrl && (
+                 <div className="absolute inset-0 z-0 opacity-10">
+                   <img src={currentQuestion.imageUrl} alt="Background" className="w-full h-full object-cover blur-md scale-105" />
+                 </div>
+              )}
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-text-main relative z-10 drop-shadow-sm">
+                {currentQuestion?.text || "Esperando para comenzar la partida..."}
+              </h2>
+              {currentQuestion?.imageUrl && (
+                 <img src={currentQuestion.imageUrl} className="max-h-64 lg:max-h-48 w-full object-contain mx-auto mt-6 rounded-2xl relative z-10 shadow-xl border-4 border-white" alt="Question" />
+              )}
+           </Card>
 
-       {!showRanking && (
-         <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 md:gap-6 px-2`}>
-            {currentQuestion?.options.map((opt, i) => {
-              const isCorrect = useGameStore.getState().correctOptions.includes(opt.id);
-              const isRevealed = status === 'revealed';
-              let opacity = 'opacity-100';
-              if (isRevealed && !isCorrect) opacity = 'opacity-30';
+           {!showRanking && currentQuestion?.type === 'image_choice' && (
+              <div className="flex-1">
+                 <div className="grid grid-cols-2 gap-4 h-full min-h-[300px] lg:min-h-full">
+                    {currentQuestion.options.map((opt, i) => {
+                      const isCorrect = useGameStore.getState().correctOptions.includes(opt.id);
+                      const isRevealed = status === 'revealed';
+                      return (
+                        <div key={opt.id} className={`relative flex rounded-3xl ${optionColors[i%4]} overflow-hidden shadow-xl transition-all duration-300 ${isRevealed && !isCorrect ? 'opacity-40' : 'opacity-100'}`}>
+                           {opt.imageUrl && (
+                             <img src={opt.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                           )}
+                           {isRevealed && isCorrect && <CheckCircle2 className="absolute top-3 right-3 text-white w-8 h-8 lg:w-10 lg:h-10" />}
+                        </div>
+                      );
+                    })}
+                 </div>
+              </div>
+           )}
+        </div>
 
-              return (
-                <div key={opt.id} className={`flex ${currentQuestion.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
-                   {currentQuestion.type === 'ordering' && (
-                      <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
-                         {opt.position || i + 1}
-                      </div>
-                   )}
-                   {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
-                   <span className={`text-white font-extrabold ${currentQuestion.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
-                   {isRevealed && isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
-                </div>
-              );
-            })}
-         </div>
-       )}
+        {!showRanking && currentQuestion?.type !== 'image_choice' && (
+          <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 md:gap-6 px-2`}>
+             {currentQuestion?.options.map((opt, i) => {
+               const isCorrect = useGameStore.getState().correctOptions.includes(opt.id);
+               const isRevealed = status === 'revealed';
+               let opacity = 'opacity-100';
+               if (isRevealed && !isCorrect) opacity = 'opacity-30';
 
-       {status === 'revealed' && showRanking && (
+               return (
+                 <div key={opt.id} className={`flex ${currentQuestion.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
+                    {currentQuestion.type === 'ordering' && (
+                       <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
+                          {opt.position || i + 1}
+                       </div>
+                    )}
+                    {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
+                    <span className={`text-white font-extrabold ${currentQuestion.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
+                    {isRevealed && isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
+                 </div>
+               );
+             })}
+          </div>
+        )}
+
+        {status === 'revealed' && !showRanking && currentQuestion?.type === 'short_answer' && (
+          <Card className="mt-8 rounded-[2rem] shadow-2xl border-4 border-green-500 animate-in slide-in-from-bottom-6">
+            <CardHeader className="bg-green-500/10 rounded-t-[2rem] border-b border-green-500/20 pb-4 pt-6">
+              <CardTitle className="text-green-600 text-2xl font-extrabold px-4 flex items-center gap-2">
+                <CheckCircle2 className="w-8 h-8" /> Respuesta Correcta
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 px-8 pb-8">
+              <div className="flex flex-col gap-3">
+                {currentQuestion.options
+                  .filter(o => o.content && o.content.trim() !== '')
+                  .map((opt, i) => (
+                    <div key={i} className="text-2xl md:text-3xl font-extrabold text-text-main text-center bg-green-500/10 rounded-2xl py-4 px-4 border-2 border-green-500/20">
+                      {opt.content}
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {status === 'revealed' && showRanking && (
          <Card className="mt-12 rounded-[3rem] shadow-2xl border-none animate-in slide-in-from-bottom-8">
            <CardHeader className="bg-primary/10 rounded-t-[3rem] border-b border-primary/10 pb-4 pt-8">
              <CardTitle className="text-primary text-3xl font-extrabold px-4">Top 5 Parcial</CardTitle>
