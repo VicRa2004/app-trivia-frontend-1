@@ -16,13 +16,13 @@ Toda la construcción visual de interfaces deberá adherirse a las siguientes di
 
 El frontend está configurado con React 19 y Vite. Se deben usar ESTRICTAMENTE las siguientes librerías que ya están instaladas para propósitos específicos:
 
-- **Manejo de Formularios y Validación:** Usa `react-hook-form` junto a `zod` (`@hookform/resolvers/zod` en caso de requerirse interconectar). Todos los formularios (login, registro, crear quiz) deben usar este patrón.
+- **Manejo de Formularios y Validación:** Usa `react-hook-form` junto a `zod` v4 (`@hookform/resolvers`). Todos los formularios (login, registro, crear quiz) deben usar este patrón.
 - **Llamadas a la API REST (HTTP):** Usa `axios` configurado con instancias reutilizables (para inyectar interceptores de JWT) y enuélvelo TODO con `@tanstack/react-query` para manejar carga, errores, caché y paginación.
 - **Estado Global:** Usa `zustand` para el estado persistente del usuario (sesión/token) y posiblemente el estado local del juego en curso.
-- **Enrutamiento:** Usa `react-router-dom` v7 para definir páginas y protecciones de rutas ( Guards para usuarios no autenticados ).
+- **Enrutamiento:** Usa `react-router-dom` v7 para definir páginas y protecciones de rutas (Guards para usuarios no autenticados).
 - **Tiempo Real:** Usa `socket.io-client` para la comunicación del juego.
 - **Iconos:** Usa `lucide-react`.
-- **Estilos:** Usa `tailwindcss` v4.
+- **Estilos:** Usa `tailwindcss` v4 con plugin `@tailwindcss/vite` (NO PostCSS).
 
 ## 3. Estructura de Proyecto (Arquitectura de Carpetas)
 
