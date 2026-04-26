@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Loader2, Check } from 'lucide-react';
-import { Card } from './Card';
-import type { Avatar } from '../features/users/types';
+import { useState } from "react";
+import { Loader2, Check } from "lucide-react";
+import { Card } from "./Card";
+import type { Avatar } from "../features/users/types";
+import { API_URL } from "../config/env";
 
 interface AvatarPickerProps {
   avatars: Avatar[];
@@ -10,7 +11,12 @@ interface AvatarPickerProps {
   isLoading?: boolean;
 }
 
-export const AvatarPicker = ({ avatars, selectedId, onSelect, isLoading }: AvatarPickerProps) => {
+export const AvatarPicker = ({
+  avatars,
+  selectedId,
+  onSelect,
+  isLoading,
+}: AvatarPickerProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   if (isLoading) {
@@ -40,23 +46,24 @@ export const AvatarPicker = ({ avatars, selectedId, onSelect, isLoading }: Avata
             key={avatar.id}
             className={`
               relative cursor-pointer overflow-hidden transition-all duration-300
-              ${isSelected
-                ? 'ring-4 ring-primary shadow-lg shadow-primary/30 scale-[1.02]'
-                : 'hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20'
+              ${
+                isSelected
+                  ? "ring-4 ring-primary shadow-lg shadow-primary/30 scale-[1.02]"
+                  : "hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/20"
               }
             `}
             onClick={() => onSelect(avatar)}
             onMouseEnter={() => setHoveredId(avatar.id)}
             onMouseLeave={() => setHoveredId(null)}
           >
-            <div className="aspect-square relative bg-gradient-to-br from-primary-light/30 to-primary/10 flex items-center justify-center p-4">
+            <div className="aspect-square relative bg-linear-to-br from-primary-light/30 to-primary/10 flex items-center justify-center p-4">
               <img
-                src={avatar.imageUrl}
+                src={`${API_URL}/public${avatar.imageUrl}`}
                 alt={avatar.name}
                 className={`
                   w-full h-full object-contain transition-all duration-300
-                  ${isHovered ? 'scale-110' : 'scale-100'}
-                  ${isSelected ? 'drop-shadow-lg' : ''}
+                  ${isHovered ? "scale-110" : "scale-100"}
+                  ${isSelected ? "drop-shadow-lg" : ""}
                 `}
               />
 
@@ -67,11 +74,15 @@ export const AvatarPicker = ({ avatars, selectedId, onSelect, isLoading }: Avata
               )}
             </div>
 
-            <div className={`
+            <div
+              className={`
               p-3 text-center transition-colors duration-200
-              ${isSelected ? 'bg-primary text-white' : 'bg-surface'}
-            `}>
-              <p className={`font-bold text-sm truncate ${isSelected ? 'text-white' : 'text-text-main'}`}>
+              ${isSelected ? "bg-primary text-white" : "bg-surface"}
+            `}
+            >
+              <p
+                className={`font-bold text-sm truncate ${isSelected ? "text-white" : "text-text-main"}`}
+              >
                 {avatar.name}
               </p>
             </div>
