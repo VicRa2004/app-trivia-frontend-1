@@ -10,7 +10,11 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
     <div className="flex flex-col items-center justify-center p-6 w-full max-w-4xl mx-auto min-h-[80vh] animate-in slide-in-from-bottom-8">
       <Card className="w-full text-center border-4 border-primary p-8 md:p-12 mb-8 bg-surface shadow-2xl shadow-primary-light/50">
         <h2 className="text-xl md:text-2xl font-bold text-text-muted mb-2 uppercase tracking-widest">PIN de Juego</h2>
-        <div className="text-6xl md:text-9xl font-extrabold text-primary tracking-widest">{gamePin}</div>
+        <div className="text-6xl md:text-9xl font-extrabold text-primary tracking-widest animate-in zoom-in duration-500">
+            {(gamePin || '0000').split('').map((digit, i) => (
+              <span key={i} className="inline-block animate-[flip_0.6s_ease-in-out_both]" style={{ animationDelay: `${i * 0.1}s` }}>{digit}</span>
+            ))}
+          </div>
       </Card>
 
       <div className="w-full flex justify-between items-end mb-4 px-2">
@@ -18,7 +22,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
           <Users className="text-primary"/> Jugadores: {players.length}
         </h3>
         {isHost && (
-           <Button icon={Play} size="lg" onClick={onStart} className="text-xl font-bold shadow-xl shadow-primary/30">
+           <Button icon={Play} size="lg" onClick={onStart} className="text-xl font-bold shadow-xl shadow-primary/30 animate-pulse">
              ¡Comenzar!
            </Button>
         )}

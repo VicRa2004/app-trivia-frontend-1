@@ -57,7 +57,7 @@ export const HostView = ({
         <h1 className="text-6xl font-extrabold text-primary mb-16 drop-shadow-md">¡Podio Final!</h1>
         <div className="flex flex-col md:flex-row items-end justify-center gap-8 w-full px-4">
            {podium.map((p, i) => (
-             <div key={i} className={`flex flex-col items-center animate-in Math.max(slide-in-from-bottom-${(3-i)*10}, slide-in-from-bottom-10) duration-700`}>
+             <div key={i} className={`flex flex-col items-center animate-in slide-in-from-bottom-${20 + i * 15} duration-700`}>
                  <div className="font-extrabold text-3xl mb-2 text-text-main">{p.username}</div>
                  <div className="font-bold text-xl text-primary mb-4 bg-primary/10 px-4 py-1 rounded-full">{p.score} pts</div>
                  <div className={`w-36 rounded-t-4xl bg-primary shadow-2xl flex items-start justify-center pt-8 text-white text-6xl font-extrabold transition-all`} style={{ height: `${(3 - i) * 140}px`, opacity: i === 0 ? 1 : 0.85 }}>
@@ -82,14 +82,19 @@ export const HostView = ({
            {currentQuestion ? `Pregunta ${questionIndex + 1} de ${questionTotal}` : 'Partida Lista'}
          </span>
          
-         {status === 'playing' && currentQuestion && (
-            <div className="flex-1 mx-2 md:mx-8 h-4 bg-border/50 rounded-full overflow-hidden shadow-inner">
-               <div 
-                  className={`h-full rounded-full transition-all duration-100 ease-linear ${timeLeft < 25 ? 'bg-red-500 animate-[pulse_0.5s_ease-in-out_infinite]' : 'bg-primary'}`}
-                  style={{ width: `${timeLeft}%` }}
-               />
-            </div>
-         )}
+{status === 'playing' && currentQuestion && (
+            <>
+               <div className="flex items-center gap-2 mx-2 md:mx-4">
+                  <span className="font-extrabold text-lg text-primary tabular-nums">{Math.ceil(timeLeft * currentQuestion.timeLimit / 100)}s</span>
+               </div>
+               <div className="flex-1 mx-2 md:mx-8 h-4 bg-border/50 rounded-full overflow-hidden shadow-inner">
+                  <div
+                     className={`h-full rounded-full transition-all duration-100 ease-linear ${timeLeft < 25 ? 'bg-red-500 animate-[pulse_0.5s_ease-in-out_infinite]' : 'bg-primary'}`}
+                     style={{ width: `${timeLeft}%` }}
+                  />
+               </div>
+            </>
+          )}
          
          <div className="flex gap-4">
            {status === 'playing' && currentQuestion ? (
@@ -111,9 +116,9 @@ export const HostView = ({
                    <img src={currentQuestion.imageUrl} alt="Background" className="w-full h-full object-cover blur-md scale-105" />
                  </div>
               )}
-              <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-text-main relative z-10 drop-shadow-sm">
-                {currentQuestion?.text || "Esperando para comenzar la partida..."}
-              </h2>
+<h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold leading-tight text-text-main relative z-10 drop-shadow-sm animate-in slide-in-from-top-4 fade-in">
+                 {currentQuestion?.text || "Esperando para comenzar la partida..."}
+               </h2>
               {currentQuestion?.imageUrl && (
                  <img src={currentQuestion.imageUrl} className="max-h-64 lg:max-h-48 w-full object-contain mx-auto mt-6 rounded-2xl relative z-10 shadow-xl border-4 border-white" alt="Question" />
               )}

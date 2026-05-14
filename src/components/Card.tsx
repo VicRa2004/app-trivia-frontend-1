@@ -3,7 +3,7 @@ import React from 'react';
 export const Card = ({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
-      className={`rounded-3xl border border-border bg-surface text-text-main shadow-sm flex flex-col overflow-hidden ${className || ''}`}
+      className={`rounded-3xl border border-border bg-surface text-text-main shadow-sm flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 ${className || ''}`}
       {...props}
     >
       {children}

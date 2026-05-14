@@ -3,7 +3,7 @@ import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { FileText, Save, Image as ImageIcon } from 'lucide-react';
+import { FileText, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useCreateQuizMutation } from '../features/quizzes/hooks/useQuizzesHooks';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ const CreateQuiz = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const { mutate: createQuiz, isPending } = useCreateQuizMutation();
   const navigate = useNavigate();
 
@@ -67,13 +68,21 @@ const CreateQuiz = () => {
                 />
                 {thumbnailUrl && (
                   <div className="mt-2 rounded-2xl overflow-hidden border-2 border-border relative h-40">
-                    <img 
-                      src={thumbnailUrl} 
-                      alt="Banner Preview" 
+                    {isImageLoading && (
+                      <div className="absolute inset-0 bg-border/50 flex items-center justify-center z-10">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      </div>
+                    )}
+                    <img
+                      src={thumbnailUrl}
+                      alt="Banner Preview"
                       className="w-full h-full object-cover"
+                      onLoad={() => setIsImageLoading(false)}
                       onError={(e) => {
+                        setIsImageLoading(false);
                         (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Error+al+cargar+imagen';
                       }}
+                      onLoadStart={() => setIsImageLoading(true)}
                     />
                   </div>
                 )}

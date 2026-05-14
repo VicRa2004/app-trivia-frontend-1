@@ -24,6 +24,7 @@ const EditQuiz = () => {
     { content: '', imageUrl: '', isCorrect: false, position: 3 },
     { content: '', imageUrl: '', isCorrect: false, position: 4 },
   ]);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const [isEditingQuiz, setIsEditingQuiz] = useState(false);
   const [quizBanner, setQuizBanner] = useState('');
@@ -104,12 +105,13 @@ const EditQuiz = () => {
           })),
         },
       },
-      {
-         onSuccess: () => {
+{
+          onSuccess: () => {
             resetForm();
-            alert(editingQuestionId ? '¡Pregunta actualizada con éxito!' : '¡Pregunta añadida con éxito!');
-         }
-      }
+            setToast({ message: editingQuestionId ? '¡Pregunta actualizada con éxito!' : '¡Pregunta añadida con éxito!', type: 'success' });
+            setTimeout(() => setToast(null), 3000);
+          }
+       }
     );
   };
 
@@ -147,6 +149,11 @@ const EditQuiz = () => {
 
   return (
     <Layout>
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-xl animate-in slide-in-from-bottom-4 text-white font-bold ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 animate-in fade-in">
          {/* Sidebar: Lista de Preguntas creadas */}
          <div className="w-full md:w-1/3 flex flex-col gap-4">
@@ -224,8 +231,11 @@ const EditQuiz = () => {
                     </div>
                   ))}
                   {(!quiz.questions || quiz.questions.length === 0) && (
-                    <div className="text-center p-6 border-2 border-dashed rounded-xl text-text-muted text-sm">
-                      No hay preguntas aún
+                    <div className="text-center p-8 border-2 border-dashed rounded-xl text-text-muted text-sm flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Plus size={24} className="text-primary" />
+                      </div>
+                      <span>No hay preguntas aún</span>
                     </div>
                   )}
                </CardContent>

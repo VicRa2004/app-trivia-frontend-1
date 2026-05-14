@@ -1,20 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #7f0df2;
-  --color-primary-hover: #6c0ac7;
-  --color-primary-light: #ecd9fe;
-  --color-secondary: #ffce00; /* Color vibrante amarillo para un toque lúdico */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #dbeafe;
+
+  --color-secondary: #ffce00;
   --color-secondary-hover: #eabf00;
-  
+
   --color-background: #fdfbfd;
   --color-surface: #ffffff;
-  
+
   --color-text-main: #1f1a24;
   --color-text-muted: #6b6375;
   --color-border: #e3ddec;
 
   --font-sans: "Plus Jakarta Sans", sans-serif;
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 @layer base {
@@ -24,5 +28,83 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth);
   }
+
+  .dark body,
+  body.dark {
+    --color-background: #0f0d13;
+    --color-surface: #1a1625;
+    --color-text-main: #f4f1f7;
+    --color-text-muted: #9d95a5;
+    --color-border: #2d2640;
+    --color-primary-light: #1e3a5f;
+  }
+}
+
+@layer utilities {
+  .bg-mesh-primary {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(255, 206, 0, 0.08) 0%, transparent 50%),
+      var(--color-background);
+  }
+
+  .dark .bg-mesh-primary {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(255, 206, 0, 0.12) 0%, transparent 50%),
+      var(--color-background);
+  }
+
+  .bg-dots-pattern {
+    background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .shadow-glow-primary {
+    box-shadow: 0 0 20px -5px rgba(37, 99, 235, 0.4);
+  }
+
+  .shadow-glow-secondary {
+    box-shadow: 0 0 20px -5px rgba(255, 206, 0, 0.4);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s var(--ease-spring) forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s var(--ease-spring) forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s var(--ease-spring) forwards;
+  }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes flip {
+  0% { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
 }

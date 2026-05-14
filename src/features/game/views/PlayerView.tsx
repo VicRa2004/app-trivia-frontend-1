@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { Trophy, CheckCircle2, AlertTriangle, Send } from 'lucide-react';
+import { Card } from '../../../components/Card';
 
 export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: string | string[], ms: number) => void }) => {
   const { currentQuestion, playerScore, status, answerError, correctOptions } = useGameStore();
@@ -65,15 +66,15 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
 
   const optionColors = ['bg-[#e21b3c]', 'bg-[#1368ce]', 'bg-[#d89e00]', 'bg-[#26890c]'];
 
-  if (answerError) {
-     return (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 bg-orange-500 rounded-4xl p-6 shadow-2xl">
-           <AlertTriangle className="w-32 h-32 mb-6" />
-           <h1 className="text-4xl font-extrabold mb-4 text-center">¡Demasiado Tarde!</h1>
-           <p className="text-xl font-bold mb-6 text-center">{answerError}</p>
-        </div>
-     );
-  }
+if (answerError) {
+      return (
+        <Card className="flex flex-col items-center justify-center min-h-[80vh] animate-in zoom-in duration-300 border-4 border-orange-500 bg-orange-500 p-8 shadow-2xl shadow-orange-500/20">
+           <AlertTriangle className="w-32 h-32 mb-6 text-white" />
+           <h1 className="text-4xl font-extrabold mb-4 text-center text-white">¡Demasiado Tarde!</h1>
+           <p className="text-xl font-bold mb-6 text-center text-white/90">{answerError}</p>
+        </Card>
+      );
+   }
 
   if (status === 'finished') {
      return (
@@ -235,14 +236,17 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
           </div>
        </div>
 
-       {currentQuestion && !interaction.payloadSent && (
-          <div className="w-full h-4 bg-border/50 rounded-full overflow-hidden shadow-inner mt-2">
-             <div 
-                className={`h-full rounded-full transition-all duration-100 ease-linear ${timeLeft < 25 ? 'bg-red-500 animate-[pulse_0.5s_ease-in-out_infinite]' : 'bg-primary'}`}
-                style={{ width: `${timeLeft}%` }}
-             />
-          </div>
-       )}
+{currentQuestion && !interaction.payloadSent && (
+           <div className="flex items-center gap-3 mt-2">
+              <div className="w-full h-4 bg-border/50 rounded-full overflow-hidden shadow-inner">
+                 <div
+                    className={`h-full rounded-full transition-all duration-100 ease-linear ${timeLeft < 25 ? 'bg-red-500 animate-[pulse_0.5s_ease-in-out_infinite]' : 'bg-primary'}`}
+                    style={{ width: `${timeLeft}%` }}
+                 />
+              </div>
+              <span className="font-extrabold text-lg text-primary tabular-nums shrink-0">{Math.ceil(timeLeft * currentQuestion.timeLimit / 100)}s</span>
+           </div>
+        )}
 
        {currentQuestion && (
           <div className="text-center font-extrabold text-xl md:text-2xl text-text-main my-2 px-4 shadow-sm bg-surface rounded-2xl py-4 border border-border">
