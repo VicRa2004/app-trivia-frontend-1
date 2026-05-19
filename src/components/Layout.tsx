@@ -1,12 +1,14 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../features/auth/store/useAuthStore";
+import { useGameStore } from "../features/game/store/useGameStore";
 import { Button } from "./Button";
 import { LogOut, User, Sun, Moon } from "lucide-react";
 import { API_URL } from "../config/env";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuthStore();
+  const resetGame = useGameStore((state) => state.resetGame);
   const [isDark, setIsDark] = React.useState(false);
 
   useEffect(() => {
@@ -75,7 +77,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={logout}
+                  onClick={() => {
+                    logout();
+                    resetGame();
+                  }}
                   title="Cerrar Sesión"
                   className="text-text-muted hover:text-red-500 rounded-full"
                 >

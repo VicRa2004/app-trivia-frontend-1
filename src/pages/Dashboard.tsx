@@ -7,6 +7,7 @@ import { useQuizzesQuery, useMyQuizzesQuery, useDeleteQuizMutation } from '../fe
 import { useNavigate } from 'react-router-dom';
 import type { Quiz } from '../features/quizzes/types';
 import { useCreateGameSessionMutation } from '../features/game/hooks/useGameApiHooks';
+import { useGameStore } from '../features/game/store/useGameStore';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -14,11 +15,13 @@ const Dashboard = () => {
   const { data: publicData, isLoading: isPublicLoading, isError: isPublicError } = useQuizzesQuery(1, 10);
   const { mutate: createGame, isPending } = useCreateGameSessionMutation();
   const deleteMutation = useDeleteQuizMutation();
+  const resetGame = useGameStore((state) => state.resetGame);
   const [pinInput, setPinInput] = useState('');
 
   const handleJoinGame = (e: React.FormEvent) => {
     e.preventDefault();
     if (pinInput.trim().length > 0) {
+      resetGame();
       navigate(`/game/${pinInput.trim()}`);
     }
   };

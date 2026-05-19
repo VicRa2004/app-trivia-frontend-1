@@ -7,7 +7,6 @@ import { useAuthStore } from "../../auth/store/useAuthStore";
 export const useGameSocket = (gamePin: string | null) => {
   const socketRef = useRef<Socket | null>(null);
   const token = useAuthStore((state) => state.token);
-  const isHost = useGameStore((state) => state.isHost);
 
   const setPlayers = useGameStore((state) => state.setPlayers);
   const setStatus = useGameStore((state) => state.setStatus);
@@ -16,6 +15,8 @@ export const useGameSocket = (gamePin: string | null) => {
   const setRevealed = useGameStore((state) => state.setRevealed);
   const setFinished = useGameStore((state) => state.setFinished);
   const setAnswerError = useGameStore((state) => state.setAnswerError);
+  const setAnswersCount = useGameStore((state) => state.setAnswersCount);
+  const setPlayerLastResult = useGameStore((state) => state.setPlayerLastResult);
 
   useEffect(() => {
     if (!gamePin || !token) return;
@@ -31,6 +32,10 @@ export const useGameSocket = (gamePin: string | null) => {
       socket.emit("join_game", { gamePin, token }, (response: any) => {
         // Callback de respuesta directa para join_game (principalmente para host)
         if (response && response.success) {
+          // Sincronizar el rol de host si viene en la respuesta
+          if (response.isHost !== undefined) {
+            useGameStore.getState().setGamePin(gamePin, response.isHost);
+          }
           // Restaurar estado completo del juego
           if (response.playersList) setPlayers(response.playersList);
 
@@ -70,6 +75,9 @@ export const useGameSocket = (gamePin: string | null) => {
     });
 
     socket.on("new_question", (payload) => {
+      setPlayerLastResult(null);
+      // Initialize count to 0 answered, total players
+      setAnswersCount({ answered: 0, total: useGameStore.getState().players.length });
       setNewQuestion(payload.question, payload.index, payload.total);
     });
 
@@ -80,12 +88,26 @@ export const useGameSocket = (gamePin: string | null) => {
     socket.on("answer_received", (payload) => {
       if (payload.success) {
         setPlayerScore(payload.newScore);
+        setPlayerLastResult({
+          isCorrect: payload.isCorrect,
+          pointsScored: payload.pointsScored,
+          newScore: payload.newScore,
+        });
         setAnswerError(null);
       } else {
+        setPlayerLastResult({
+          isCorrect: false,
+          pointsScored: 0,
+          newScore: 0,
+        });
         setAnswerError(
           payload.message || "Demasiado tarde, cupo de ganadores lleno",
         );
       }
+    });
+
+    socket.on("answers_count_updated", (payload) => {
+      setAnswersCount(payload);
     });
 
     socket.on("correct_answer_revealed", (payload) => {
@@ -100,13 +122,13 @@ export const useGameSocket = (gamePin: string | null) => {
       alert(`Alerta de Servidor: ${err.message || "Error desconocido"}`);
     });
 
+    // Clean up
     return () => {
       socket.disconnect();
     };
   }, [
     gamePin,
     token,
-    isHost,
     setPlayers,
     setStatus,
     setNewQuestion,
@@ -114,6 +136,8 @@ export const useGameSocket = (gamePin: string | null) => {
     setRevealed,
     setFinished,
     setAnswerError,
+    setAnswersCount,
+    setPlayerLastResult,
   ]);
 
   const emitNextQuestion = () =>

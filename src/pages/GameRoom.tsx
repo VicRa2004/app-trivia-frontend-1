@@ -11,6 +11,15 @@ const GameRoom = () => {
   const navigate = useNavigate();
   const { status, isHost } = useGameStore();
   const resetGame = useGameStore((state) => state.resetGame);
+  const setGamePin = useGameStore((state) => state.setGamePin);
+  const currentStorePin = useGameStore((state) => state.gamePin);
+
+  // Sincronizar el pin de juego desde la URL hacia el store
+  useEffect(() => {
+    if (gamePin && gamePin !== currentStorePin) {
+      setGamePin(gamePin, isHost && gamePin === currentStorePin);
+    }
+  }, [gamePin, currentStorePin, isHost, setGamePin]);
 
   const {
     emitStartGame,
@@ -30,7 +39,10 @@ const GameRoom = () => {
   // Limpiar estado al desmontar o navegar fuera
   useEffect(() => {
     return () => {
-      resetGame();
+      // Solo limpiar si realmente estamos saliendo de la ruta del juego
+      if (!window.location.pathname.startsWith("/game")) {
+        resetGame();
+      }
     };
   }, [resetGame]);
 

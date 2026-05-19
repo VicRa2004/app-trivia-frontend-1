@@ -4,7 +4,7 @@ import { Trophy, CheckCircle2, AlertTriangle, Send } from 'lucide-react';
 import { Card } from '../../../components/Card';
 
 export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: string | string[], ms: number) => void }) => {
-  const { currentQuestion, playerScore, status, answerError, correctOptions } = useGameStore();
+  const { currentQuestion, playerScore, status, answerError, correctOptions, playerLastResult } = useGameStore();
   
   const [interaction, setInteraction] = useState<{ qId?: string | null, payloadSent: boolean, startedAt: number }>({
     qId: currentQuestion?.id,
@@ -41,6 +41,12 @@ export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: strin
     setTextAnswer('');
     setOrderedIds([]);
     setTimeLeft(100);
+  }
+
+  // Sort displayed options for ordering questions when correct answers are revealed
+  const displayedOptions = currentQuestion?.options ? [...currentQuestion.options] : [];
+  if (status === 'revealed' && currentQuestion?.type === 'ordering') {
+    displayedOptions.sort((a, b) => (a.position || 0) - (b.position || 0));
   }
 
   // Timer Effect
@@ -92,18 +98,40 @@ if (answerError) {
   }
 
   if (status === 'revealed' && showResultScreen) {
-    const isCorrect = true; // El servidor ya summing puntos si es correcto, aquí solo mostramos fin del tiempo
+    const answered = playerLastResult !== null;
+    const isCorrect = playerLastResult?.isCorrect || false;
+    const pointsScored = playerLastResult?.pointsScored || 0;
+
     return (
-       <div className={`flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 ${isCorrect ? 'bg-green-500' : 'bg-red-500'} rounded-4xl p-6 shadow-2xl`}>
-          <CheckCircle2 className="w-32 h-32 mb-6" />
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-center">¡Tiempo Agotado!</h1>
+       <div className={`flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 ${!answered ? 'bg-amber-500 shadow-amber-500/20' : isCorrect ? 'bg-green-500 shadow-green-500/20' : 'bg-red-500 shadow-red-500/20'} rounded-4xl p-8 shadow-2xl`}>
+          {!answered ? (
+            <>
+              <AlertTriangle className="w-32 h-32 mb-6 animate-bounce" />
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-center">¡Tiempo Agotado!</h1>
+              <p className="text-lg font-semibold text-white/80 mb-6">No respondiste a tiempo.</p>
+            </>
+          ) : isCorrect ? (
+            <>
+              <CheckCircle2 className="w-32 h-32 mb-6 animate-pulse text-white" />
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-center">¡Correcto!</h1>
+              <p className="text-3xl font-black bg-white/20 px-6 py-2 rounded-full mb-6 text-yellow-300">+{pointsScored} pts</p>
+            </>
+          ) : (
+            <>
+              <div className="w-32 h-32 rounded-full border-8 border-white flex items-center justify-center mb-6 font-black text-6xl">✕</div>
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-center">¡Incorrecto!</h1>
+              <p className="text-lg font-semibold text-white/80 mb-6">¡Mejor suerte en la próxima!</p>
+            </>
+          )}
+          
           {currentQuestion?.type === 'short_answer' && (
-            <div className="mt-4 bg-white/20 rounded-2xl p-6 text-center">
-              <p className="text-lg font-bold mb-2">Respuesta correcta:</p>
-              <p className="text-2xl md:text-3xl font-extrabold">{currentQuestion.options.find(o => useGameStore.getState().correctOptions.includes(o.id))?.content || 'No disponible'}</p>
+            <div className="mt-4 bg-white/15 border border-white/20 rounded-2xl p-6 text-center w-full max-w-md">
+              <p className="text-sm font-semibold mb-1 text-white/80">Respuesta correcta:</p>
+              <p className="text-xl font-extrabold">{currentQuestion.options[0]?.content || 'No disponible'}</p>
             </div>
           )}
-          <div className="flex items-center gap-2 text-xl md:text-2xl font-bold bg-white/20 px-6 py-3 rounded-full mt-4 shadow-sm">
+          
+          <div className="flex items-center gap-2 text-xl md:text-2xl font-bold bg-white/20 px-6 py-3 rounded-full mt-6 shadow-sm">
             <Trophy /> Puntuación Total: {playerScore}
           </div>
        </div>
@@ -256,23 +284,23 @@ if (answerError) {
 
        {status === 'revealed' && !showResultScreen ? (
           <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 md:gap-6 px-2 mt-4`}>
-             {currentQuestion?.options.map((opt, i) => {
-               const isCorrect = correctOptions.includes(opt.id);
-               let opacity = 'opacity-30';
-               if (isCorrect) opacity = 'opacity-100';
+             {displayedOptions.map((opt, i) => {
+                const isCorrect = correctOptions.includes(opt.id);
+                let opacity = 'opacity-30';
+                if (isCorrect) opacity = 'opacity-100';
 
-               return (
-                 <div key={opt.id} className={`flex ${currentQuestion?.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
-                    {currentQuestion?.type === 'ordering' && (
-                       <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
-                          {opt.position || i + 1}
-                       </div>
-                    )}
-                    {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
-                    <span className={`text-white font-extrabold ${currentQuestion?.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
-                    {isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
-                 </div>
-               );
+                return (
+                  <div key={opt.id} className={`flex ${currentQuestion?.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
+                     {currentQuestion?.type === 'ordering' && (
+                        <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
+                           {opt.position || i + 1}
+                        </div>
+                     )}
+                     {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
+                     <span className={`text-white font-extrabold ${currentQuestion?.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
+                     {isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
+                  </div>
+                );
              })}
           </div>
        ) : (

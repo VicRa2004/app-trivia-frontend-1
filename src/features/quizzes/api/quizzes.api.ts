@@ -1,5 +1,5 @@
 import { api } from '../../../api/axios';
-import type { Quiz, PaginatedResponse, CreateQuizData, QuizQuestion, CreateQuestionData, UpdateQuizData } from '../types';
+import type { Quiz, PaginatedResponse, CreateQuizData, QuizQuestion, CreateQuestionData, UpdateQuizData, Category } from '../types';
 
 export const getQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedResponse<Quiz>> => {
   const response = await api.get<PaginatedResponse<Quiz>>(`/quizzes?page=${page}&limit=${limit}`);
@@ -33,4 +33,18 @@ export const getMyQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedRes
 
 export const deleteQuizFn = async (quizId: string): Promise<void> => {
   await api.delete(`/quizzes/${quizId}`);
+};
+
+export const updateQuestionFn = async ({ quizId, questionId, data }: { quizId: string, questionId: string, data: CreateQuestionData }): Promise<QuizQuestion> => {
+  const response = await api.patch<QuizQuestion>(`/quizzes/${quizId}/questions/${questionId}`, data);
+  return response.data;
+};
+
+export const deleteQuestionFn = async ({ quizId, questionId }: { quizId: string, questionId: string }): Promise<void> => {
+  await api.delete(`/quizzes/${quizId}/questions/${questionId}`);
+};
+
+export const getCategoriesFn = async (): Promise<PaginatedResponse<Category>> => {
+  const response = await api.get<PaginatedResponse<Category>>('/categories?limit=100');
+  return response.data;
 };

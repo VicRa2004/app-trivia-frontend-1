@@ -26,6 +26,12 @@ export interface GameQuestion {
   options: GameOption[];
 }
 
+export interface PlayerLastResult {
+  isCorrect: boolean;
+  pointsScored: number;
+  newScore: number;
+}
+
 interface GameState {
   gamePin: string | null;
   isHost: boolean;
@@ -38,6 +44,8 @@ interface GameState {
   podium: GamePlayer[];
   playerScore: number;
   answerError: string | null;
+  answersCount: { answered: number; total: number } | null;
+  playerLastResult: PlayerLastResult | null;
   // Acciones
   setGamePin: (pin: string, isHost?: boolean) => void;
   setStatus: (status: GameState["status"]) => void;
@@ -47,6 +55,8 @@ interface GameState {
   setFinished: (podium: GamePlayer[]) => void;
   setPlayerScore: (score: number) => void;
   setAnswerError: (error: string | null) => void;
+  setAnswersCount: (count: { answered: number; total: number } | null) => void;
+  setPlayerLastResult: (result: PlayerLastResult | null) => void;
   resetGame: () => void;
 }
 
@@ -62,6 +72,8 @@ const initialState = {
   podium: [],
   playerScore: 0,
   answerError: null,
+  answersCount: null,
+  playerLastResult: null,
 };
 
 export const useGameStore = create<GameState>()(
@@ -89,6 +101,8 @@ export const useGameStore = create<GameState>()(
       setFinished: (podium) => set({ podium, status: "finished" }),
       setPlayerScore: (score) => set({ playerScore: score }),
       setAnswerError: (error) => set({ answerError: error }),
+      setAnswersCount: (count) => set({ answersCount: count }),
+      setPlayerLastResult: (result) => set({ playerLastResult: result }),
       resetGame: () => set(initialState),
     }),
     {
@@ -105,6 +119,8 @@ export const useGameStore = create<GameState>()(
         correctOptions: state.correctOptions,
         podium: state.podium,
         playerScore: state.playerScore,
+        answersCount: state.answersCount,
+        playerLastResult: state.playerLastResult,
       }),
     },
   ),

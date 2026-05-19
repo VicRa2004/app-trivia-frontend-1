@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '../config/env';
 import { useAuthStore } from '../features/auth/store/useAuthStore';
+import { useGameStore } from '../features/game/store/useGameStore';
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -25,6 +26,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Limpia la sesión si el servidor rechaza el token.
       useAuthStore.getState().logout();
+      useGameStore.getState().resetGame();
     }
     return Promise.reject(error);
   }

@@ -2,6 +2,13 @@ import { useGameStore } from '../store/useGameStore';
 import { Button } from '../../../components/Button';
 import { Card } from '../../../components/Card';
 import { Users, Play, User } from 'lucide-react';
+import { API_URL } from '../../../config/env';
+
+const getFullAvatarUrl = (url?: string) => {
+  if (!url) return undefined;
+  if (url.startsWith('http')) return url;
+  return `${API_URL}/public${url}`;
+};
 
 export const LobbyView = ({ onStart }: { onStart: () => void }) => {
   const { gamePin, players, isHost } = useGameStore();
@@ -36,7 +43,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
           >
             <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30 shadow-inner">
               {p.avatarUrl ? (
-                <img src={p.avatarUrl} alt={p.username} className="w-full h-full object-cover" />
+                <img src={getFullAvatarUrl(p.avatarUrl)} alt={p.username} className="w-full h-full object-cover" />
               ) : (
                 <User className="w-7 h-7" />
               )}

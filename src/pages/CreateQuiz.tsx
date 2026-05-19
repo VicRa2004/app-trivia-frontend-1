@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { FileText, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { useCreateQuizMutation } from '../features/quizzes/hooks/useQuizzesHooks';
+import { useCreateQuizMutation, useCategoriesQuery } from '../features/quizzes/hooks/useQuizzesHooks';
 import { useNavigate } from 'react-router-dom';
 
 const CreateQuiz = () => {
@@ -12,13 +12,22 @@ const CreateQuiz = () => {
   const [description, setDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState('');
+  const { data: categoriesData } = useCategoriesQuery();
+  const categories = categoriesData?.data || [];
   const { mutate: createQuiz, isPending } = useCreateQuizMutation();
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createQuiz(
-      { title, description, thumbnailUrl, isPublic: true },
+      { 
+        title, 
+        description, 
+        thumbnailUrl: thumbnailUrl || undefined, 
+        categoryId: categoryId || undefined, 
+        isPublic: true 
+      },
       { onSuccess: () => navigate('/dashboard') }
     );
   };
@@ -56,6 +65,22 @@ const CreateQuiz = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="mb-1.5 text-sm font-semibold text-text-main">Categoría</label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent font-semibold"
+                >
+                  <option value="">Selecciona una categoría...</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-col gap-2">
