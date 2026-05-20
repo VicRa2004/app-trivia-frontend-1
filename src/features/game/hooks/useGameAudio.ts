@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 // Singleton para mantener la referencia de la música activa y que no se duplique al renderizar componentes
 let currentMusic: HTMLAudioElement | null = null;
@@ -10,41 +10,41 @@ export const useGameAudio = () => {
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Inicializar efectos de sonido de forma perezosa en el cliente
-  const getAudio = (ref: React.MutableRefObject<HTMLAudioElement | null>, path: string) => {
+  const getAudio = useCallback((ref: React.MutableRefObject<HTMLAudioElement | null>, path: string) => {
     if (typeof window === "undefined") return null;
     if (!ref.current) {
       ref.current = new Audio(path);
       ref.current.volume = 0.4;
     }
     return ref.current;
-  };
+  }, []);
 
-  const playCorrect = () => {
+  const playCorrect = useCallback(() => {
     const audio = getAudio(correctAudioRef, "/audio/correct.wav");
     if (audio) {
       audio.currentTime = 0;
       audio.play().catch((err) => console.log("Audio play error:", err));
     }
-  };
+  }, [getAudio]);
 
-  const playIncorrect = () => {
+  const playIncorrect = useCallback(() => {
     const audio = getAudio(incorrectAudioRef, "/audio/incorrect.wav");
     if (audio) {
       audio.currentTime = 0;
       audio.play().catch((err) => console.log("Audio play error:", err));
     }
-  };
+  }, [getAudio]);
 
-  const playTick = () => {
+  const playTick = useCallback(() => {
     const audio = getAudio(tickAudioRef, "/audio/tick.wav");
     if (audio) {
       audio.currentTime = 0;
       audio.volume = 0.15; // Un poco más silencioso el tick
       audio.play().catch((err) => console.log("Audio play error:", err));
     }
-  };
+  }, [getAudio]);
 
-  const startMusic = (path: string, type: "lobby" | "battle") => {
+  const startMusic = useCallback((path: string, type: "lobby" | "battle") => {
     if (typeof window === "undefined") return;
 
     // Si ya está sonando esta misma música, no hacer nada
@@ -68,18 +68,18 @@ export const useGameAudio = () => {
       // Los navegadores a veces bloquean el autoplay si el usuario no ha interactuado
       console.log("Autoplay de música bloqueado por el navegador. Esperando interacción:", err);
     });
-  };
+  }, []);
 
-  const startLobbyMusic = () => startMusic("/audio/lobby.wav", "lobby");
-  const startBattleMusic = () => startMusic("/audio/battle.wav", "battle");
+  const startLobbyMusic = useCallback(() => startMusic("/audio/lobby.wav", "lobby"), [startMusic]);
+  const startBattleMusic = useCallback(() => startMusic("/audio/battle.wav", "battle"), [startMusic]);
 
-  const stopMusic = () => {
+  const stopMusic = useCallback(() => {
     if (currentMusic) {
       currentMusic.pause();
       currentMusic = null;
       currentMusicType = null;
     }
-  };
+  }, []);
 
   // Limpiar referencias locales al desmontar el componente (opcional)
   useEffect(() => {

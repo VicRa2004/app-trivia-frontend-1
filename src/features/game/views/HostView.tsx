@@ -3,6 +3,8 @@ import { Button } from "../../../components/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/Card";
 import { Eye, ArrowRight, Flag, CheckCircle2, Trophy, Users, BarChart3 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+
+const optionShapes = ["▲", "◆", "●", "■"];
 import { API_URL } from "../../../config/env";
 import { useGameAudio } from "../hooks/useGameAudio";
 
@@ -35,11 +37,16 @@ export const HostView = ({
   const [timeLeft, setTimeLeft] = useState(100);
   const lastSecondRef = useRef<number>(-1);
   const onShowAnswerRef = useRef(onShowAnswer);
+  const playTickRef = useRef(playTick);
 
   // Mantener actualizado el ref del callback para evitar dependencias circulares en useEffect
   useEffect(() => {
     onShowAnswerRef.current = onShowAnswer;
   }, [onShowAnswer]);
+
+  useEffect(() => {
+    playTickRef.current = playTick;
+  }, [playTick]);
 
   // Temporizador ultra fluido usando requestAnimationFrame a 60 FPS
   useEffect(() => {
@@ -61,7 +68,7 @@ export const HostView = ({
         lastSecondRef.current = secondsRemaining;
         // Reproducir sonido de tick en los últimos 5 segundos críticos
         if (secondsRemaining <= 5 && secondsRemaining > 0) {
-          playTick();
+          playTickRef.current();
         }
       }
 
@@ -77,7 +84,7 @@ export const HostView = ({
       cancelAnimationFrame(animationFrameId);
       setTimeLeft(100);
     };
-  }, [status, currentQuestion, playTick]);
+  }, [status, currentQuestion]);
 
   const [showRanking, setShowRanking] = useState(false);
 
@@ -111,36 +118,45 @@ export const HostView = ({
     if (sortedPodium[0]) displayPodium.push({ ...sortedPodium[0], place: 1 });
     if (sortedPodium[2]) displayPodium.push({ ...sortedPodium[2], place: 3 });
 
-    // En caso de que haya menos de 3 jugadores, rellenamos de forma segura
     const getPlaceColor = (place: number) => {
-      if (place === 1) return "from-yellow-400 to-amber-500 shadow-yellow-500/20";
-      if (place === 2) return "from-slate-300 to-gray-400 shadow-slate-400/20";
-      return "from-amber-600 to-amber-800 shadow-amber-700/20";
+      if (place === 1) return "from-yellow-400 via-amber-400 to-yellow-600 shadow-yellow-400/35 border-yellow-300";
+      if (place === 2) return "from-slate-200 via-slate-300 to-gray-400 shadow-slate-300/35 border-slate-300";
+      return "from-amber-700 via-amber-800 to-orange-900 shadow-amber-800/35 border-amber-800";
     };
 
     const getPlaceHeightClass = (place: number) => {
-      if (place === 1) return "h-[220px] md:h-[280px] z-10 scale-105";
-      if (place === 2) return "h-[160px] md:h-[200px]";
-      return "h-[120px] md:h-[150px]";
+      if (place === 1) return "h-[260px] md:h-[320px] z-10 scale-105 ring-4 ring-yellow-400/20";
+      if (place === 2) return "h-[190px] md:h-[230px]";
+      return "h-[140px] md:h-[170px]";
+    };
+
+    const getAvatarBorder = (place: number) => {
+      if (place === 1) return "border-yellow-400 ring-4 ring-yellow-400/30 ring-offset-2";
+      if (place === 2) return "border-slate-300 ring-4 ring-slate-300/30 ring-offset-2";
+      return "border-amber-700 ring-4 ring-amber-700/30 ring-offset-2";
     };
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-5xl mx-auto text-center animate-in zoom-in duration-500 pb-12">
-        <h1 className="text-5xl md:text-7xl font-black text-[#7f0df2] mb-12 drop-shadow-sm flex items-center gap-3">
-          <Trophy className="w-12 h-12 md:w-16 md:h-16 text-yellow-400 fill-yellow-400 animate-bounce" />
-          ¡Podio Final!
+      <div className="flex flex-col items-center justify-center min-h-[85vh] w-full max-w-5xl mx-auto text-center animate-in zoom-in duration-700 pb-16 relative overflow-hidden">
+        {/* Decoraciones flotantes */}
+        <div className="absolute top-10 left-10 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-yellow-200/25 rounded-full blur-3xl animate-pulse delay-700" />
+
+        <h1 className="text-6xl md:text-8xl font-black text-gray-800 mb-16 drop-shadow-sm flex items-center justify-center gap-4">
+          <Trophy className="w-14 h-14 md:w-20 md:h-20 text-yellow-400 fill-yellow-400 animate-bounce" />
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1b4cfc] via-blue-600 to-[#1b4cfc]">¡Podio Final!</span>
         </h1>
         
         {/* Renderizado de las torres del podio */}
-        <div className="flex items-end justify-center gap-4 md:gap-8 w-full px-4 min-h-[380px]">
+        <div className="flex items-end justify-center gap-4 md:gap-10 w-full px-4 min-h-[420px]">
           {displayPodium.map((p, idx) => (
             <div
               key={idx}
-              className="flex flex-col items-center animate-in slide-in-from-bottom-32 duration-1000 ease-out flex-1 max-w-[200px]"
+              className="flex flex-col items-center animate-in slide-in-from-bottom-40 duration-1000 ease-out flex-1 max-w-[220px]"
             >
               {/* Avatar Flotante */}
-              <div className="relative mb-3">
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-[#7f0df2] shadow-xl bg-[#7f0df2]/10 flex items-center justify-center">
+              <div className="relative mb-5">
+                <div className={`w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 bg-white flex items-center justify-center shadow-2xl relative z-10 transition-transform hover:scale-105 ${getAvatarBorder(p.place)}`}>
                   {p.avatarUrl ? (
                     <img
                       src={getFullAvatarUrl(p.avatarUrl)}
@@ -148,36 +164,40 @@ export const HostView = ({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-[#7f0df2] font-black text-3xl">
+                    <span className="text-[#1b4cfc] font-black text-4xl">
                       {p.username[0].toUpperCase()}
                     </span>
                   )}
                 </div>
-                {/* Corona para el 1er lugar */}
-                {p.place === 1 && (
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl animate-pulse">
+                {/* Corona para el 1er lugar y medallas para los demás */}
+                {p.place === 1 ? (
+                  <span className="absolute -top-7 left-1/2 -translate-x-1/2 text-5xl animate-bounce duration-1000 z-20">
                     👑
+                  </span>
+                ) : (
+                  <span className="absolute -top-3 -right-2 text-2xl z-20">
+                    {p.place === 2 ? "🥈" : "🥉"}
                   </span>
                 )}
               </div>
 
               {/* Nombre e info del Jugador */}
-              <div className="font-black text-xl md:text-3xl mb-1 text-gray-800 truncate w-full">
+              <div className="font-black text-xl md:text-3xl mb-1 text-gray-800 truncate w-full drop-shadow-sm">
                 {p.username}
               </div>
-              <div className="font-black text-sm md:text-lg text-[#7f0df2] mb-4 bg-[#7f0df2]/10 px-4 py-1.5 rounded-full border border-[#7f0df2]/15">
-                {p.score} pts
+              <div className="font-black text-xs md:text-base text-[#1b4cfc] mb-5 bg-[#1b4cfc]/5 border border-[#1b4cfc]/15 px-4.5 py-1.5 rounded-full shadow-sm">
+                {p.score} <span className="font-bold text-[10px] text-gray-400">pts</span>
               </div>
 
               {/* Columna física del podio */}
               <div
-                className={`w-full rounded-t-[2rem] bg-gradient-to-b ${getPlaceColor(
+                className={`w-full rounded-t-[2.5rem] bg-gradient-to-b ${getPlaceColor(
                   p.place
-                )} shadow-2xl flex items-start justify-center pt-6 text-white text-5xl md:text-6xl font-black ${getPlaceHeightClass(
+                )} border-t-2 shadow-3xl flex items-start justify-center pt-8 text-white text-6xl md:text-7xl font-black transition-all ${getPlaceHeightClass(
                   p.place
                 )}`}
               >
-                <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center text-2xl border border-white/25 shadow-inner">
+                <div className="bg-white/20 w-14 h-14 rounded-full flex items-center justify-center text-3xl border border-white/30 shadow-inner">
                   {p.place}
                 </div>
               </div>
@@ -186,12 +206,12 @@ export const HostView = ({
         </div>
 
         {/* Botón de dashboard */}
-        <div className="mt-16">
+        <div className="mt-20">
           <Button
             onClick={() => (window.location.href = "/dashboard")}
-            className="bg-[#7f0df2] hover:bg-[#6809c9] text-white px-10 py-5 rounded-full font-black text-2xl shadow-xl transition-all hover:scale-105 active:scale-95 duration-200"
+            className="bg-gradient-to-r from-[#1b4cfc] to-blue-600 hover:brightness-110 text-white px-12 py-5.5 rounded-full font-black text-2xl shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-none"
           >
-            Volver al Dashboard
+            Finalizar y Salir
           </Button>
         </div>
       </div>
@@ -213,7 +233,7 @@ export const HostView = ({
     if (timeLeft < 50) {
       return "bg-gradient-to-r from-amber-400 to-orange-500";
     }
-    return "bg-gradient-to-r from-[#7f0df2] to-indigo-500";
+    return "bg-gradient-to-r from-[#1b4cfc] to-indigo-500";
   };
 
   return (
@@ -221,14 +241,14 @@ export const HostView = ({
       {/* Barra superior de estado */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mt-4 mb-6 px-2">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-black text-lg text-[#7f0df2] bg-[#7f0df2]/10 px-6 py-3 rounded-full border border-[#7f0df2]/10 shadow-sm flex items-center gap-2">
+          <span className="font-black text-lg text-[#1b4cfc] bg-[#1b4cfc]/10 px-6 py-3 rounded-full border border-[#1b4cfc]/10 shadow-sm flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             {currentQuestion
               ? `Pregunta ${questionIndex + 1} de ${questionTotal}`
               : "Partida Lista"}
           </span>
           {status === "playing" && answersCount && (
-            <span className="font-black text-lg text-purple-600 bg-purple-500/10 px-6 py-3 rounded-full border border-purple-500/20 shadow-sm flex items-center gap-2 animate-pulse">
+            <span className="font-black text-lg text-[#1b4cfc] bg-[#1b4cfc]/10 px-6 py-3 rounded-full border border-[#1b4cfc]/20 shadow-sm flex items-center gap-2 animate-pulse">
               <Users className="w-5 h-5" />
               Respuestas: {answersCount.answered} / {answersCount.total}
             </span>
@@ -250,7 +270,7 @@ export const HostView = ({
             <Button
               icon={ArrowRight}
               onClick={onNextQuestion}
-              className="bg-[#7f0df2] hover:bg-[#6809c9] text-white rounded-2xl shadow-xl text-lg px-8 py-3 font-extrabold hover:scale-102 transition-all"
+              className="bg-[#1b4cfc] hover:bg-[#1036c7] text-white rounded-2xl shadow-xl text-lg px-8 py-3 font-extrabold hover:scale-102 transition-all"
             >
               {!currentQuestion ? "Lanzar 1ra Pregunta" : "Siguiente Pregunta"}
             </Button>
@@ -271,11 +291,11 @@ export const HostView = ({
         <div className="flex items-center gap-4 mx-2 md:mx-4 mb-6">
           <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-200/50">
             <div
-              className={`h-full rounded-full transition-all duration-75 ease-linear ${getTimerColorClass()}`}
+              className={`h-full rounded-full ${getTimerColorClass()}`}
               style={{ width: `${timeLeft}%` }}
             />
           </div>
-          <span className="font-black text-xl text-[#7f0df2] tabular-nums shrink-0 w-12 text-right">
+          <span className="font-black text-xl text-[#1b4cfc] tabular-nums shrink-0 w-12 text-right">
             {Math.ceil((timeLeft * currentQuestion.timeLimit) / 100)}s
           </span>
         </div>
@@ -283,7 +303,7 @@ export const HostView = ({
 
       {/* Caja de Pregunta Principal */}
       <div className="flex flex-col lg:flex-row gap-6 mb-8">
-        <Card className="text-center p-8 lg:p-12 shadow-xl border-none rounded-[2rem] bg-white relative overflow-hidden flex-1 border border-gray-100 min-h-[220px] flex flex-col justify-center">
+        <Card className="p-8 lg:p-12 shadow-2xl border-none rounded-[2.5rem] bg-white relative overflow-hidden flex-1 border border-gray-100/80 min-h-[220px] flex flex-col justify-center">
           {currentQuestion?.imageUrl && (
             <div className="absolute inset-0 z-0 opacity-[0.03]">
               <img
@@ -293,15 +313,26 @@ export const HostView = ({
               />
             </div>
           )}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight text-gray-800 relative z-10 animate-in slide-in-from-top-4 fade-in">
-            {currentQuestion?.text || "Esperando para comenzar la partida..."}
-          </h2>
-          {currentQuestion?.imageUrl && (
-            <img
-              src={currentQuestion.imageUrl}
-              className="max-h-64 lg:max-h-56 w-auto object-contain mx-auto mt-6 rounded-[1.5rem] relative z-10 shadow-lg border-4 border-gray-100"
-              alt="Question"
-            />
+          
+          {currentQuestion?.imageUrl ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+              <div className="lg:col-span-7 text-center lg:text-left flex flex-col justify-center h-full">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black leading-tight text-gray-800 animate-in slide-in-from-top-4 fade-in">
+                  {currentQuestion?.text || "Esperando para comenzar la partida..."}
+                </h2>
+              </div>
+              <div className="lg:col-span-5 flex justify-center">
+                <img
+                  src={currentQuestion.imageUrl}
+                  className="max-h-72 lg:max-h-96 w-full object-cover rounded-[2rem] shadow-2xl border-4 border-gray-50 transform hover:scale-[1.01] transition-transform duration-300"
+                  alt="Question"
+                />
+              </div>
+            </div>
+          ) : (
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight text-gray-800 relative z-10 animate-in slide-in-from-top-4 fade-in text-center py-6">
+              {currentQuestion?.text || "Esperando para comenzar la partida..."}
+            </h2>
           )}
         </Card>
 
@@ -321,9 +352,17 @@ export const HostView = ({
                       isRevealed && !isCorrect ? "opacity-30 scale-95" : "opacity-100"
                     }`}
                   >
-                    {opt.imageUrl && (
+                    {opt.imageUrl ? (
                       <img src={opt.imageUrl} alt="" className="w-full aspect-square object-cover" />
+                    ) : (
+                      <div className="w-full aspect-square flex items-center justify-center text-white font-black text-lg">Sin Imagen</div>
                     )}
+                    
+                    {/* Figura Geométrica en Círculo Flotante */}
+                    <div className="absolute top-3 left-3 w-10 h-10 rounded-full bg-black/40 backdrop-blur-[2px] flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-md">
+                      {optionShapes[i % 4]}
+                    </div>
+
                     {isRevealed && isCorrect && (
                       <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[2px] flex items-center justify-center">
                         <CheckCircle2 className="text-white w-16 h-16 drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)] animate-pulse" />
@@ -354,37 +393,31 @@ export const HostView = ({
             return (
               <div
                 key={opt.id}
-                className={`flex ${
-                  currentQuestion.type === "ordering" ? "flex-row" : "flex-col justify-center text-center"
-                } items-center min-h-[100px] md:min-h-[120px] rounded-[2rem] ${
+                className={`flex flex-row items-center justify-start text-left min-h-[120px] lg:min-h-[150px] rounded-[2.5rem] ${
                   optionColors[i % 4]
-                } ${opacity} transition-all duration-300 shadow-lg p-6 gap-4 border-2 ${
-                  isRevealed && isCorrect ? "border-white shadow-xl" : "border-transparent"
+                } ${opacity} transition-all duration-300 shadow-xl p-6 lg:p-8 gap-6 lg:gap-8 border-4 ${
+                  isRevealed && isCorrect ? "border-white shadow-2xl scale-[1.01]" : "border-transparent"
                 }`}
               >
-                {currentQuestion.type === "ordering" && (
-                  <div className="w-12 h-12 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-2xl shadow-inner border border-white/30">
-                    {isRevealed ? opt.position || i + 1 : "?"}
-                  </div>
-                )}
+                {/* Círculo a la izquierda: Posición si es ordenación, Figura Geométrica en otro caso */}
+                <div className="w-14 h-14 lg:w-18 lg:h-18 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-2xl lg:text-3.5xl border border-white/30 shadow-inner">
+                  {currentQuestion.type === "ordering" 
+                    ? (isRevealed ? opt.position || i + 1 : "?")
+                    : optionShapes[i % 4]
+                  }
+                </div>
                 {opt.imageUrl && (
                   <img
                     src={opt.imageUrl}
                     alt=""
-                    className="h-16 w-16 md:h-24 md:w-24 object-cover rounded-2xl shadow-md border-2 border-white/20"
+                    className="h-20 w-20 lg:h-24 lg:w-24 object-cover rounded-2xl shadow-md border-2 border-white/20 shrink-0"
                   />
                 )}
-                <span
-                  className={`text-white font-black drop-shadow-sm ${
-                    currentQuestion.type === "ordering"
-                      ? "text-xl md:text-2xl text-left flex-1"
-                      : "text-2xl md:text-3xl mx-auto"
-                  }`}
-                >
+                <span className="text-white font-black drop-shadow-sm text-2xl lg:text-4xl flex-1 leading-snug">
                   {opt.content}
                 </span>
                 {isRevealed && isCorrect && (
-                  <CheckCircle2 className="text-white w-8 h-8 md:w-10 md:h-10 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
+                  <CheckCircle2 className="text-white w-10 h-10 lg:w-12 lg:h-12 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
                 )}
               </div>
             );
@@ -432,15 +465,15 @@ export const HostView = ({
                 className={`flex justify-between items-center bg-white border-2 ${
                   i === 0
                     ? "border-yellow-400 bg-yellow-50/30"
-                    : "border-gray-100 hover:border-[#7f0df2]/20"
+                    : "border-gray-100 hover:border-[#1b4cfc]/20"
                 } rounded-[1.5rem] p-4 md:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5`}
               >
                 <span className="font-black text-xl md:text-2xl flex items-center gap-4 text-gray-800">
                   <span
                     className={`w-10 h-10 rounded-full ${
-                      i === 0 ? "bg-yellow-400 text-yellow-950" : "bg-[#7f0df2]/10 text-[#7f0df2]"
+                      i === 0 ? "bg-yellow-400 text-yellow-950" : "bg-[#1b4cfc]/10 text-[#1b4cfc]"
                     } flex items-center justify-center text-lg font-black border ${
-                      i === 0 ? "border-yellow-500" : "border-[#7f0df2]/15"
+                      i === 0 ? "border-yellow-500" : "border-[#1b4cfc]/15"
                     }`}
                   >
                     {i + 1}
@@ -458,7 +491,7 @@ export const HostView = ({
                 </span>
                 <span
                   className={`font-black ${
-                    i === 0 ? "text-amber-600" : "text-[#7f0df2]"
+                    i === 0 ? "text-amber-600" : "text-[#1b4cfc]"
                   } text-2xl flex items-center gap-1.5`}
                 >
                   {p.score} <span className="text-sm text-gray-400 font-semibold mt-1.5">pts</span>

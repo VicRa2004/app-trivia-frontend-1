@@ -44,8 +44,8 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
     <div className="flex flex-col items-center justify-center p-6 w-full max-w-4xl mx-auto min-h-[75vh] animate-in slide-in-from-bottom-8 duration-500 relative overflow-hidden">
       
       {/* Elementos decorativos animados en el fondo */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-[#7f0df2]/5 rounded-full blur-2xl animate-pulse duration-[4s]" />
-      <div className="absolute bottom-10 right-10 w-44 h-44 bg-pink-500/5 rounded-full blur-3xl animate-pulse duration-[6s]" />
+      <div className="absolute top-10 left-10 w-32 h-32 bg-[#1b4cfc]/5 rounded-full blur-2xl animate-pulse duration-[4s]" />
+      <div className="absolute bottom-10 right-10 w-44 h-44 bg-cyan-500/5 rounded-full blur-3xl animate-pulse duration-[6s]" />
 
       {/* Tarjeta del PIN principal con Glassmorphism y sombras premium */}
       <Card className="w-full text-center border-2 border-gray-100 p-8 md:p-12 mb-8 bg-white/80 backdrop-blur-md shadow-xl rounded-[2.5rem] relative group">
@@ -54,7 +54,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
         </h2>
         
         {/* PIN con animación de volteo en cada dígito */}
-        <div className="text-6xl md:text-8xl font-black text-[#7f0df2] tracking-widest my-4 flex items-center justify-center select-none">
+        <div className="text-6xl md:text-8xl font-black text-[#1b4cfc] tracking-widest my-4 flex items-center justify-center select-none">
           {(gamePin || "000000").split("").map((digit, i) => (
             <span
               key={i}
@@ -69,7 +69,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
         {/* Botón de Compartir PIN */}
         <button
           onClick={copyToClipboard}
-          className="mt-2 text-sm font-bold text-gray-500 hover:text-[#7f0df2] bg-gray-50 hover:bg-[#7f0df2]/5 border border-gray-100 hover:border-[#7f0df2]/10 py-2 px-4 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
+          className="mt-2 text-sm font-bold text-gray-500 hover:text-[#1b4cfc] bg-gray-50 hover:bg-[#1b4cfc]/5 border border-gray-100 hover:border-[#1b4cfc]/10 py-2 px-4 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
         >
           {copied ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
           {copied ? "¡Copiado!" : "Compartir Invitación"}
@@ -79,8 +79,8 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
       {/* Cabecera del Listado de Jugadores */}
       <div className="w-full flex justify-between items-center mb-6 px-4">
         <h3 className="text-2xl font-black flex items-center gap-3 text-gray-800">
-          <Users className="text-[#7f0df2] w-7 h-7" /> Jugadores unidos:{" "}
-          <span className="text-[#7f0df2] bg-[#7f0df2]/10 px-3 py-1 rounded-xl text-xl font-black border border-[#7f0df2]/15">
+          <Users className="text-[#1b4cfc] w-7 h-7" /> Jugadores unidos:{" "}
+          <span className="text-[#1b4cfc] bg-[#1b4cfc]/10 px-3 py-1 rounded-xl text-xl font-black border border-[#1b4cfc]/15">
             {players.length}
           </span>
         </h3>
@@ -89,7 +89,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
             icon={Play}
             size="lg"
             onClick={onStart}
-            className="text-xl font-black bg-[#7f0df2] hover:bg-[#6b0bc0] text-white px-8 py-4 rounded-2xl shadow-xl shadow-[#7f0df2]/20 hover:scale-103 active:scale-[0.98] transition-all border-none cursor-pointer"
+            className="text-xl font-black bg-[#1b4cfc] hover:bg-[#1036c7] text-white px-8 py-4 rounded-2xl shadow-xl shadow-[#1b4cfc]/20 hover:scale-103 active:scale-[0.98] transition-all border-none cursor-pointer"
           >
             ¡Comenzar!
           </Button>
@@ -105,7 +105,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
             style={{ animationDelay: `${i * 0.05}s` }}
           >
             {/* Contenedor de Avatar con efecto hover */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#7f0df2] to-pink-500 p-0.5 shadow-md transition-all group-hover:scale-105">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#1b4cfc] to-cyan-500 p-0.5 shadow-md transition-all group-hover:scale-105">
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white">
                 {p.avatarUrl ? (
                   <img

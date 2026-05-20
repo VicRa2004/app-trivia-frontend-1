@@ -20,16 +20,13 @@ const CreateQuiz = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createQuiz(
-      { 
-        title, 
-        description, 
-        thumbnailUrl: thumbnailUrl || undefined, 
-        categoryId: categoryId || undefined, 
-        isPublic: true 
-      },
-      { onSuccess: () => navigate('/dashboard') }
-    );
+    createQuiz({ 
+      title, 
+      description, 
+      thumbnailUrl: thumbnailUrl || undefined, 
+      categoryId: categoryId || undefined, 
+      isPublic: true 
+    });
   };
 
   return (
