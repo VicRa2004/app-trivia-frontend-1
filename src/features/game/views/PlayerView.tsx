@@ -1,311 +1,465 @@
-import { useState, useEffect } from 'react';
-import { useGameStore } from '../store/useGameStore';
-import { Trophy, CheckCircle2, AlertTriangle, Send } from 'lucide-react';
-import { Card } from '../../../components/Card';
+import { useState, useEffect, useRef } from "react";
+import { useGameStore } from "../store/useGameStore";
+import { Trophy, CheckCircle2, AlertTriangle, Send, XCircle } from "lucide-react";
+import { Card } from "../../../components/Card";
+import { useGameAudio } from "../hooks/useGameAudio";
 
-export const PlayerView = ({ onSubmitAnswer }: { onSubmitAnswer: (payload: string | string[], ms: number) => void }) => {
-  const { currentQuestion, playerScore, status, answerError, correctOptions, playerLastResult } = useGameStore();
-  
-  const [interaction, setInteraction] = useState<{ qId?: string | null, payloadSent: boolean, startedAt: number }>({
+export const PlayerView = ({
+  onSubmitAnswer,
+}: {
+  onSubmitAnswer: (payload: string | string[], ms: number) => void;
+}) => {
+  const {
+    currentQuestion,
+    playerScore,
+    status,
+    answerError,
+    correctOptions,
+    playerLastResult,
+  } = useGameStore();
+  const { playTick } = useGameAudio();
+
+  const [interaction, setInteraction] = useState<{
+    qId?: string | null;
+    payloadSent: boolean;
+    startedAt: number;
+  }>({
     qId: currentQuestion?.id,
     payloadSent: false,
-    startedAt: new Date().getTime(),
+    startedAt: Date.now(),
   });
 
   const [showResultScreen, setShowResultScreen] = useState(false);
+  const lastSecondRef = useRef<number>(-1);
 
-  if (status !== 'revealed' && showResultScreen) {
-     setShowResultScreen(false);
+  if (status !== "revealed" && showResultScreen) {
+    setShowResultScreen(false);
   }
 
   useEffect(() => {
-     if (status === 'revealed') {
-        const to = setTimeout(() => {
-           setShowResultScreen(true);
-        }, 5000);
-        return () => clearTimeout(to);
-     }
+    if (status === "revealed") {
+      const to = setTimeout(() => {
+        setShowResultScreen(true);
+      }, 4000); // Acortado un poco a 4s para mejorar el ritmo de juego
+      return () => clearTimeout(to);
+    }
   }, [status]);
 
-  const [textAnswer, setTextAnswer] = useState('');
+  const [textAnswer, setTextAnswer] = useState("");
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(100);
 
-  // Sync with current question
+  // Sincronizar con la pregunta actual
   if (currentQuestion?.id !== interaction.qId) {
     setInteraction({
       qId: currentQuestion?.id,
       payloadSent: false,
-      startedAt: new Date().getTime(),
+      startedAt: Date.now(),
     });
-    setTextAnswer('');
+    setTextAnswer("");
     setOrderedIds([]);
     setTimeLeft(100);
+    lastSecondRef.current = -1;
   }
 
-  // Sort displayed options for ordering questions when correct answers are revealed
-  const displayedOptions = currentQuestion?.options ? [...currentQuestion.options] : [];
-  if (status === 'revealed' && currentQuestion?.type === 'ordering') {
+  // Ordenar las opciones mostradas para preguntas de tipo ordering cuando se revelan los resultados
+  const displayedOptions = currentQuestion?.options
+    ? [...currentQuestion.options]
+    : [];
+  if (status === "revealed" && currentQuestion?.type === "ordering") {
     displayedOptions.sort((a, b) => (a.position || 0) - (b.position || 0));
   }
 
-  // Timer Effect
+  // Temporizador ultra fluido usando requestAnimationFrame a 60 FPS
   useEffect(() => {
-    if (status !== 'playing' || !currentQuestion || interaction.payloadSent) return;
-    
+    if (status !== "playing" || !currentQuestion || interaction.payloadSent) return;
+
     const duration = currentQuestion.timeLimit * 1000;
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const elapsed = now - interaction.startedAt;
+    const start = interaction.startedAt;
+    let animationFrameId: number;
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const elapsed = now - start;
       const remainingPct = Math.max(0, 100 - (elapsed / duration) * 100);
+      
       setTimeLeft(remainingPct);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [status, currentQuestion, interaction.payloadSent, interaction.startedAt]);
+
+      const secondsRemaining = Math.ceil((remainingPct * currentQuestion.timeLimit) / 100);
+      if (secondsRemaining !== lastSecondRef.current) {
+        lastSecondRef.current = secondsRemaining;
+        // Reproducir sonido de tick en los últimos 5 segundos críticos
+        if (secondsRemaining <= 5 && secondsRemaining > 0) {
+          playTick();
+        }
+      }
+
+      if (remainingPct > 0) {
+        animationFrameId = requestAnimationFrame(updateTimer);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(updateTimer);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [status, currentQuestion, interaction.payloadSent, interaction.startedAt, playTick]);
 
   const handleSubmit = (payload: string | string[]) => {
-    if (interaction.payloadSent || status !== 'playing') return;
-    setInteraction(prev => ({ ...prev, payloadSent: true }));
-    const nowTs = new Date().getTime();
+    if (interaction.payloadSent || status !== "playing") return;
+    setInteraction((prev) => ({ ...prev, payloadSent: true }));
+    const nowTs = Date.now();
     onSubmitAnswer(payload, nowTs - interaction.startedAt);
   };
 
-  const optionColors = ['bg-[#e21b3c]', 'bg-[#1368ce]', 'bg-[#d89e00]', 'bg-[#26890c]'];
+  // Paleta de colores Kahoot-style Premium (Vibrantes con HSL adaptados)
+  const optionColors = [
+    "bg-gradient-to-br from-[#ff3355] to-[#e21b3c] hover:shadow-[#e21b3c]/30",
+    "bg-gradient-to-br from-[#2a82e6] to-[#1368ce] hover:shadow-[#1368ce]/30",
+    "bg-gradient-to-br from-[#ffca28] to-[#d89e00] hover:shadow-[#d89e00]/30",
+    "bg-gradient-to-br from-[#4cd137] to-[#26890c] hover:shadow-[#26890c]/30",
+  ];
 
-if (answerError) {
-      return (
-        <Card className="flex flex-col items-center justify-center min-h-[80vh] animate-in zoom-in duration-300 border-4 border-orange-500 bg-orange-500 p-8 shadow-2xl shadow-orange-500/20">
-           <AlertTriangle className="w-32 h-32 mb-6 text-white" />
-           <h1 className="text-4xl font-extrabold mb-4 text-center text-white">¡Demasiado Tarde!</h1>
-           <p className="text-xl font-bold mb-6 text-center text-white/90">{answerError}</p>
-        </Card>
-      );
-   }
-
-  if (status === 'finished') {
-     return (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 bg-primary rounded-4xl p-6 shadow-2xl">
-           <Trophy className="w-32 h-32 mb-6 text-yellow-400" />
-           <h1 className="text-5xl font-extrabold mb-4 text-center">¡Partida Terminada!</h1>
-           <div className="text-3xl font-bold mb-8">
-             Puntuación Final: {playerScore}
-           </div>
-           <button onClick={() => window.location.href = '/dashboard'} className="bg-white text-primary px-8 py-4 rounded-3xl font-bold text-2xl shadow-md hover:bg-gray-100 transition-all">
-              Ir al Dashboard
-           </button>
-        </div>
-     );
+  if (answerError) {
+    return (
+      <Card className="flex flex-col items-center justify-center min-h-[75vh] animate-in zoom-in duration-300 border-none bg-gradient-to-br from-amber-500 to-orange-600 p-8 shadow-2xl shadow-orange-500/20 text-white rounded-[2rem]">
+        <AlertTriangle className="w-32 h-32 mb-6 text-white animate-bounce" />
+        <h1 className="text-4xl font-black mb-4 text-center">¡Ups! Tiempo Agotado</h1>
+        <p className="text-xl font-bold mb-6 text-center text-white/90">{answerError}</p>
+      </Card>
+    );
   }
 
-  if (status === 'revealed' && showResultScreen) {
+  if (status === "finished") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[75vh] w-full text-white animate-in zoom-in duration-500 bg-gradient-to-br from-[#7f0df2] to-[#5d06b3] rounded-[2.5rem] p-8 shadow-2xl shadow-[#7f0df2]/20">
+        <Trophy className="w-32 h-32 mb-6 text-yellow-300 animate-pulse drop-shadow-[0_10px_20px_rgba(253,224,71,0.4)]" />
+        <h1 className="text-5xl font-black mb-4 text-center tracking-tight">¡Partida Terminada!</h1>
+        <div className="text-3xl font-extrabold mb-10 bg-white/10 px-8 py-3 rounded-full border border-white/20">
+          Puntuación Final: <span className="text-yellow-300">{playerScore}</span>
+        </div>
+        <button
+          onClick={() => (window.location.href = "/dashboard")}
+          className="bg-white text-[#7f0df2] px-10 py-5 rounded-full font-black text-2xl shadow-lg hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
+        >
+          Volver al Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "revealed" && showResultScreen) {
     const answered = playerLastResult !== null;
     const isCorrect = playerLastResult?.isCorrect || false;
     const pointsScored = playerLastResult?.pointsScored || 0;
 
     return (
-       <div className={`flex flex-col items-center justify-center min-h-[80vh] w-full text-white animate-in zoom-in duration-300 ${!answered ? 'bg-amber-500 shadow-amber-500/20' : isCorrect ? 'bg-green-500 shadow-green-500/20' : 'bg-red-500 shadow-red-500/20'} rounded-4xl p-8 shadow-2xl`}>
-          {!answered ? (
-            <>
-              <AlertTriangle className="w-32 h-32 mb-6 animate-bounce" />
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-center">¡Tiempo Agotado!</h1>
-              <p className="text-lg font-semibold text-white/80 mb-6">No respondiste a tiempo.</p>
-            </>
-          ) : isCorrect ? (
-            <>
-              <CheckCircle2 className="w-32 h-32 mb-6 animate-pulse text-white" />
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-center">¡Correcto!</h1>
-              <p className="text-3xl font-black bg-white/20 px-6 py-2 rounded-full mb-6 text-yellow-300">+{pointsScored} pts</p>
-            </>
-          ) : (
-            <>
-              <div className="w-32 h-32 rounded-full border-8 border-white flex items-center justify-center mb-6 font-black text-6xl">✕</div>
-              <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-center">¡Incorrecto!</h1>
-              <p className="text-lg font-semibold text-white/80 mb-6">¡Mejor suerte en la próxima!</p>
-            </>
-          )}
-          
-          {currentQuestion?.type === 'short_answer' && (
-            <div className="mt-4 bg-white/15 border border-white/20 rounded-2xl p-6 text-center w-full max-w-md">
-              <p className="text-sm font-semibold mb-1 text-white/80">Respuesta correcta:</p>
-              <p className="text-xl font-extrabold">{currentQuestion.options[0]?.content || 'No disponible'}</p>
-            </div>
-          )}
-          
-          <div className="flex items-center gap-2 text-xl md:text-2xl font-bold bg-white/20 px-6 py-3 rounded-full mt-6 shadow-sm">
-            <Trophy /> Puntuación Total: {playerScore}
+      <div
+        className={`flex flex-col items-center justify-center min-h-[75vh] w-full text-white animate-in zoom-in duration-500 ${
+          !answered
+            ? "bg-gradient-to-br from-amber-500 to-orange-600 shadow-orange-500/20"
+            : isCorrect
+            ? "bg-gradient-to-br from-emerald-500 to-green-600 shadow-green-500/20"
+            : "bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/20"
+        } rounded-[2.5rem] p-8 shadow-2xl`}
+      >
+        {!answered ? (
+          <>
+            <AlertTriangle className="w-32 h-32 mb-6 animate-bounce" />
+            <h1 className="text-4xl md:text-5xl font-black mb-2 text-center">¡Tiempo Agotado!</h1>
+            <p className="text-xl font-bold text-white/80 mb-6 text-center">No respondiste esta pregunta a tiempo.</p>
+          </>
+        ) : isCorrect ? (
+          <>
+            <CheckCircle2 className="w-32 h-32 mb-6 animate-pulse text-white drop-shadow-[0_5px_15px_rgba(255,255,255,0.4)]" />
+            <h1 className="text-4xl md:text-5xl font-black mb-2 text-center">¡Correcto!</h1>
+            <p className="text-3xl font-black bg-white/20 px-8 py-3 rounded-full mb-6 text-yellow-300 border border-white/20 shadow-inner">
+              +{pointsScored} pts
+            </p>
+          </>
+        ) : (
+          <>
+            <XCircle className="w-32 h-32 mb-6 animate-pulse text-white drop-shadow-[0_5px_15px_rgba(255,255,255,0.4)]" />
+            <h1 className="text-4xl md:text-5xl font-black mb-2 text-center">¡Incorrecto!</h1>
+            <p className="text-xl font-bold text-white/80 mb-6 text-center">¡No te preocupes, la siguiente es tuya!</p>
+          </>
+        )}
+
+        {currentQuestion?.type === "short_answer" && (
+          <div className="mt-4 bg-white/10 border border-white/20 rounded-[1.5rem] p-6 text-center w-full max-w-md shadow-inner">
+            <p className="text-sm font-semibold mb-1 text-white/70">Respuesta correcta:</p>
+            <p className="text-2xl font-black">{currentQuestion.options[0]?.content || "No disponible"}</p>
           </div>
-       </div>
+        )}
+
+        <div className="flex items-center gap-2 text-xl md:text-2xl font-black bg-white/15 border border-white/25 px-8 py-4 rounded-full mt-8 shadow-md">
+          <Trophy className="w-6 h-6 text-yellow-300" /> Puntuación Total: {playerScore}
+        </div>
+      </div>
     );
   }
 
   const renderQuestionType = () => {
-     if (!currentQuestion) return null;
+    if (!currentQuestion) return null;
 
-     if (currentQuestion.type === 'short_answer') {
-        return (
-           <div className="flex flex-col gap-4 mt-8 w-full animate-in slide-in-from-bottom-4">
-              <input 
-                 type="text" 
-                 className="w-full text-center text-3xl font-extrabold p-6 rounded-4xl border-4 border-border bg-surface text-text-main focus:border-primary outline-none shadow-sm transition-all"
-                 placeholder="Escribe tu respuesta..."
-                 value={textAnswer}
-                 onChange={(e) => setTextAnswer(e.target.value)}
-                 disabled={interaction.payloadSent}
-              />
-              <button 
-                 onClick={() => handleSubmit(textAnswer)}
-                 disabled={interaction.payloadSent || !textAnswer.trim()}
-                 className="mt-4 bg-primary text-white py-6 rounded-4xl text-2xl font-bold flex justify-center items-center gap-3 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-xl"
-              >
-                 <Send size={28} /> Enviar Respuesta
-              </button>
-           </div>
-        );
-     }
-
-     if (currentQuestion.type === 'ordering') {
-        const handleOrderClick = (optId: string) => {
-           if (orderedIds.includes(optId)) {
-              setOrderedIds(prev => prev.filter(id => id !== optId));
-           } else {
-              setOrderedIds(prev => [...prev, optId]);
-           }
-        };
-
-        return (
-           <div className="flex flex-col gap-4 mt-4 flex-1 w-full animate-in fade-in">
-              <div className="text-center font-extrabold text-text-main text-lg mb-2 bg-primary/10 py-2 rounded-2xl border border-primary/20">Toca las opciones en el orden correcto</div>
-              <div className="flex justify-center gap-3 mb-2 h-14">
-                 {orderedIds.map((id, idx) => (
-                    <div key={id} className="w-14 h-14 bg-primary text-white rounded-2xl flex justify-center items-center font-extrabold text-2xl shadow-md animate-in zoom-in">{idx + 1}</div>
-                 ))}
-                 {Array.from({ length: currentQuestion.options.length - orderedIds.length }).map((_, idx) => (
-                    <div key={`empty-${idx}`} className="w-14 h-14 border-4 border-dashed border-border rounded-2xl" />
-                 ))}
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                 {currentQuestion.options.map((opt) => {
-                    const isSelected = orderedIds.includes(opt.id);
-                    const orderIndex = orderedIds.indexOf(opt.id) + 1;
-                    return (
-                       <button
-                          key={opt.id}
-                          disabled={interaction.payloadSent}
-                          onClick={() => handleOrderClick(opt.id)}
-                          className={`w-full min-h-[90px] rounded-4xl shadow-md transition-all duration-200 border-4 outline-none ${isSelected ? 'border-primary bg-primary/5 scale-[0.98]' : 'border-transparent bg-surface hover:border-border'} flex items-center p-4 gap-4`}
-                       >
-                          <div className={`w-10 h-10 rounded-full flex justify-center items-center font-extrabold text-xl ${isSelected ? 'bg-primary text-white shadow-md' : 'bg-border text-text-muted'}`}>
-                             {isSelected ? orderIndex : ''}
-                          </div>
-                          <span className="text-2xl font-bold flex-1 text-left text-text-main">{opt.content}</span>
-                          {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 object-cover rounded-xl shadow-sm border border-border" />}
-                       </button>
-                    );
-                 })}
-              </div>
-              {orderedIds.length === currentQuestion.options.length && (
-                 <button 
-                    onClick={() => handleSubmit(orderedIds)}
-                    disabled={interaction.payloadSent}
-                    className="mt-6 bg-primary text-white py-6 rounded-4xl text-2xl font-bold active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 animate-in slide-in-from-bottom-4"
-                 >
-                    <CheckCircle2 size={32} /> Confirmar Orden
-                 </button>
-              )}
-           </div>
-        );
-     }
-
-     if (currentQuestion.type === 'image_choice') {
-         return (
-            <div className="grid grid-cols-2 gap-4 flex-1 mt-6 px-2">
-               {currentQuestion.options.map((opt, i) => (
-                 <button
-                    key={opt.id}
-                    disabled={interaction.payloadSent}
-                    onClick={() => handleSubmit(opt.id)}
-                    className={`w-full aspect-square flex flex-col items-center justify-center rounded-4xl shadow-xl transition-all duration-200 border-4 border-transparent ${optionColors[i % 4].replace('bg-', 'bg-')}/50 overflow-hidden hover:brightness-110 active:scale-95 disabled:scale-100 ${interaction.payloadSent ? 'opacity-40 grayscale-[0.5]' : ''}`}
-                 >
-                    {opt.imageUrl ? (
-                       <img src={opt.imageUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                       <span className="text-text-main text-2xl font-extrabold px-4">Sin Imagen</span>
-                    )}
-                 </button>
-               ))}
-            </div>
-         );
-     }
-
-     // Default multiple_choice
-     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 mt-6">
-           {currentQuestion.options.map((opt, i) => (
-             <button
-                key={opt.id}
-                disabled={interaction.payloadSent}
-                onClick={() => handleSubmit(opt.id)}
-                className={`w-full min-h-[100px] md:min-h-[160px] flex flex-col items-center justify-center rounded-4xl shadow-xl transition-all duration-200 ${optionColors[i % 4]} text-white text-xl md:text-3xl font-extrabold hover:brightness-110 active:scale-95 disabled:scale-100 ${interaction.payloadSent ? 'opacity-40 grayscale-[0.5]' : ''}`}
-             >
-                {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-20 md:h-32 max-w-full object-cover mb-2 md:mb-4 rounded-xl shadow-lg border-4 border-white/20" />}
-                <span className="drop-shadow-md px-4">{opt.content}</span>
-             </button>
-           ))}
+    if (currentQuestion.type === "short_answer") {
+      return (
+        <div className="flex flex-col gap-4 mt-8 w-full animate-in slide-in-from-bottom-8 duration-300">
+          <input
+            type="text"
+            className="w-full text-center text-2xl md:text-3xl font-black p-6 rounded-[2rem] border-4 border-gray-200 bg-white text-gray-800 focus:border-[#7f0df2] outline-none shadow-lg transition-all focus:scale-[1.01]"
+            placeholder="Escribe tu respuesta aquí..."
+            value={textAnswer}
+            onChange={(e) => setTextAnswer(e.target.value)}
+            disabled={interaction.payloadSent}
+          />
+          <button
+            onClick={() => handleSubmit(textAnswer)}
+            disabled={interaction.payloadSent || !textAnswer.trim()}
+            className="mt-4 bg-gradient-to-r from-[#7f0df2] to-[#610bc0] text-white py-6 rounded-[2rem] text-2xl font-black flex justify-center items-center gap-3 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-xl cursor-pointer"
+          >
+            <Send size={28} /> Enviar Respuesta
+          </button>
         </div>
-     );
+      );
+    }
+
+    if (currentQuestion.type === "ordering") {
+      const handleOrderClick = (optId: string) => {
+        if (orderedIds.includes(optId)) {
+          setOrderedIds((prev) => prev.filter((id) => id !== optId));
+        } else {
+          setOrderedIds((prev) => [...prev, optId]);
+        }
+      };
+
+      return (
+        <div className="flex flex-col gap-4 mt-4 flex-1 w-full animate-in fade-in duration-300">
+          <div className="text-center font-bold text-gray-600 text-lg mb-2 bg-[#7f0df2]/10 py-3 px-6 rounded-2xl border border-[#7f0df2]/10">
+            Toca las opciones en el orden correcto
+          </div>
+          <div className="flex justify-center gap-3 mb-4 h-16">
+            {orderedIds.map((id, idx) => (
+              <div
+                key={id}
+                className="w-16 h-16 bg-gradient-to-br from-[#7f0df2] to-[#5d06b3] text-white rounded-2xl flex justify-center items-center font-black text-2xl shadow-md animate-in zoom-in"
+              >
+                {idx + 1}
+              </div>
+            ))}
+            {Array.from({
+              length: currentQuestion.options.length - orderedIds.length,
+            }).map((_, idx) => (
+              <div
+                key={`empty-${idx}`}
+                className="w-16 h-16 border-4 border-dashed border-gray-200 rounded-2xl"
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {currentQuestion.options.map((opt) => {
+              const isSelected = orderedIds.includes(opt.id);
+              const orderIndex = orderedIds.indexOf(opt.id) + 1;
+              return (
+                <button
+                  key={opt.id}
+                  disabled={interaction.payloadSent}
+                  onClick={() => handleOrderClick(opt.id)}
+                  className={`w-full min-h-[90px] rounded-[2rem] shadow-sm hover:shadow-md transition-all duration-200 border-4 cursor-pointer outline-none ${
+                    isSelected
+                      ? "border-[#7f0df2] bg-[#7f0df2]/5 scale-[0.98]"
+                      : "border-transparent bg-white hover:border-gray-200"
+                  } flex items-center p-4 gap-4`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex justify-center items-center font-black text-xl transition-all ${
+                      isSelected
+                        ? "bg-[#7f0df2] text-white shadow-md"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {isSelected ? orderIndex : ""}
+                  </div>
+                  <span className="text-xl md:text-2xl font-extrabold flex-1 text-left text-gray-800">
+                    {opt.content}
+                  </span>
+                  {opt.imageUrl && (
+                    <img
+                      src={opt.imageUrl}
+                      alt=""
+                      className="h-16 w-16 object-cover rounded-xl shadow-sm border border-gray-100"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {orderedIds.length === currentQuestion.options.length && (
+            <button
+              onClick={() => handleSubmit(orderedIds)}
+              disabled={interaction.payloadSent}
+              className="mt-6 bg-gradient-to-r from-[#7f0df2] to-[#610bc0] text-white py-6 rounded-[2rem] text-2xl font-black active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 animate-in slide-in-from-bottom-6 cursor-pointer"
+            >
+              <CheckCircle2 size={32} /> Confirmar Orden
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (currentQuestion.type === "image_choice") {
+      return (
+        <div className="grid grid-cols-2 gap-4 flex-1 mt-6 px-2 animate-in fade-in duration-300">
+          {currentQuestion.options.map((opt, i) => (
+            <button
+              key={opt.id}
+              disabled={interaction.payloadSent}
+              onClick={() => handleSubmit(opt.id)}
+              className={`w-full aspect-square flex flex-col items-center justify-center rounded-[2rem] shadow-lg transition-all duration-200 border-4 border-transparent overflow-hidden hover:scale-[1.02] hover:brightness-105 active:scale-98 disabled:scale-100 cursor-pointer ${
+                optionColors[i % 4]
+              } ${interaction.payloadSent ? "opacity-30 grayscale-[0.4]" : ""}`}
+            >
+              {opt.imageUrl ? (
+                <img src={opt.imageUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white text-2xl font-black px-4">Sin Imagen</span>
+              )}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    // Default multiple_choice
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 mt-6 animate-in fade-in duration-300">
+        {currentQuestion.options.map((opt, i) => (
+          <button
+            key={opt.id}
+            disabled={interaction.payloadSent}
+            onClick={() => handleSubmit(opt.id)}
+            className={`w-full min-h-[100px] md:min-h-[150px] flex flex-col items-center justify-center rounded-[2rem] shadow-xl hover:shadow-2xl hover:scale-[1.01] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 disabled:scale-100 disabled:translate-y-0 cursor-pointer ${
+              optionColors[i % 4]
+            } text-white text-xl md:text-3xl font-black transition-all ${
+              interaction.payloadSent ? "opacity-30 grayscale-[0.4]" : ""
+            }`}
+          >
+            {opt.imageUrl && (
+              <img
+                src={opt.imageUrl}
+                alt=""
+                className="h-20 md:h-28 max-w-[85%] object-cover mb-3 rounded-xl shadow-md border-2 border-white/20"
+              />
+            )}
+            <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] px-6 text-center leading-tight">
+              {opt.content}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const getTimerColorClass = () => {
+    if (timeLeft < 25) {
+      return "bg-gradient-to-r from-red-500 to-rose-600 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse";
+    }
+    if (timeLeft < 50) {
+      return "bg-gradient-to-r from-amber-400 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]";
+    }
+    return "bg-gradient-to-r from-[#7f0df2] to-indigo-500 shadow-[0_0_10px_rgba(127,13,242,0.2)]";
   };
 
   return (
-    <div className="flex flex-col w-full min-h-[80vh] max-w-3xl mx-auto gap-4 animate-in fade-in pb-8">
-       <div className="flex justify-between items-center bg-surface p-5 rounded-4xl shadow-md border border-border mt-4">
-          <div className="font-extrabold text-3xl flex items-center gap-3 text-primary"><Trophy className="w-8 h-8"/> {playerScore}</div>
-          <div className="font-bold text-lg bg-primary/10 text-primary px-6 py-2 rounded-full border border-primary/20">
-            {interaction.payloadSent ? 'Esperando...' : '¡A Jugar!'}
+    <div className="flex flex-col w-full min-h-[75vh] max-w-4xl mx-auto gap-4 animate-in fade-in pb-8">
+      {/* Header de Estado */}
+      <div className="flex justify-between items-center bg-white p-5 rounded-[2rem] shadow-md border border-gray-100 mt-4">
+        <div className="font-black text-3xl flex items-center gap-3 text-[#7f0df2]">
+          <Trophy className="w-8 h-8 text-yellow-400 fill-yellow-400" /> {playerScore}
+        </div>
+        <div className="font-black text-lg bg-[#7f0df2]/10 text-[#7f0df2] px-6 py-2.5 rounded-full border border-[#7f0df2]/10">
+          {interaction.payloadSent ? "Esperando..." : "¡Tu Turno!"}
+        </div>
+      </div>
+
+      {/* Temporizador */}
+      {currentQuestion && !interaction.payloadSent && (
+        <div className="flex items-center gap-4 mt-2 px-2">
+          <div className="w-full h-5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-200/50">
+            <div
+              className={`h-full rounded-full transition-all duration-75 ease-linear ${getTimerColorClass()}`}
+              style={{ width: `${timeLeft}%` }}
+            />
           </div>
-       </div>
+          <span className="font-black text-xl text-[#7f0df2] tabular-nums shrink-0 w-12 text-right">
+            {Math.ceil((timeLeft * currentQuestion.timeLimit) / 100)}s
+          </span>
+        </div>
+      )}
 
-{currentQuestion && !interaction.payloadSent && (
-           <div className="flex items-center gap-3 mt-2">
-              <div className="w-full h-4 bg-border/50 rounded-full overflow-hidden shadow-inner">
-                 <div
-                    className={`h-full rounded-full transition-all duration-100 ease-linear ${timeLeft < 25 ? 'bg-red-500 animate-[pulse_0.5s_ease-in-out_infinite]' : 'bg-primary'}`}
-                    style={{ width: `${timeLeft}%` }}
-                 />
-              </div>
-              <span className="font-extrabold text-lg text-primary tabular-nums shrink-0">{Math.ceil(timeLeft * currentQuestion.timeLimit / 100)}s</span>
-           </div>
-        )}
+      {/* Pregunta */}
+      {currentQuestion && (
+        <div className="text-center font-black text-2xl md:text-3xl text-gray-800 my-2 px-6 shadow-md bg-white rounded-[2rem] py-6 border border-gray-100 leading-snug">
+          {currentQuestion.text}
+        </div>
+      )}
 
-       {currentQuestion && (
-          <div className="text-center font-extrabold text-xl md:text-2xl text-text-main my-2 px-4 shadow-sm bg-surface rounded-2xl py-4 border border-border">
-             {currentQuestion.text}
-          </div>
-       )}
+      {/* Área Principal (Respuestas o Revelación) */}
+      {status === "revealed" && !showResultScreen ? (
+        <div
+          className={`grid grid-cols-1 ${
+            currentQuestion?.type === "ordering" ||
+            currentQuestion?.type === "short_answer"
+              ? "md:grid-cols-1"
+              : "md:grid-cols-2"
+          } gap-4 md:gap-6 px-2 mt-4`}
+        >
+          {displayedOptions.map((opt, i) => {
+            const isCorrect = correctOptions.includes(opt.id);
+            const opacity = isCorrect ? "opacity-100 scale-100" : "opacity-35 scale-[0.98]";
 
-       {status === 'revealed' && !showResultScreen ? (
-          <div className={`grid grid-cols-1 ${currentQuestion?.type === 'ordering' || currentQuestion?.type === 'short_answer' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-4 md:gap-6 px-2 mt-4`}>
-             {displayedOptions.map((opt, i) => {
-                const isCorrect = correctOptions.includes(opt.id);
-                let opacity = 'opacity-30';
-                if (isCorrect) opacity = 'opacity-100';
-
-                return (
-                  <div key={opt.id} className={`flex ${currentQuestion?.type === 'ordering' ? 'flex-row' : 'flex-col justify-center text-center'} items-center min-h-[100px] md:min-h-[120px] rounded-4xl ${optionColors[i%4]} ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-4 md:gap-6`}>
-                     {currentQuestion?.type === 'ordering' && (
-                        <div className="w-10 h-10 md:w-14 md:h-14 shrink-0 rounded-full bg-white/30 text-white flex items-center justify-center font-extrabold text-2xl md:text-3xl shadow-inner border border-white/50">
-                           {opt.position || i + 1}
-                        </div>
-                     )}
-                     {opt.imageUrl && <img src={opt.imageUrl} alt="" className="h-16 w-16 md:h-32 md:w-32 object-cover rounded-2xl shadow-lg border-4 border-white/20" />}
-                     <span className={`text-white font-extrabold ${currentQuestion?.type === 'ordering' ? 'text-xl md:text-3xl text-left flex-1' : 'text-2xl md:text-4xl mx-auto drop-shadow-md'}`}>{opt.content}</span>
-                     {isCorrect && <CheckCircle2 className="text-white w-8 h-8 md:w-12 md:h-12 ml-auto" />}
+            return (
+              <div
+                key={opt.id}
+                className={`flex ${
+                  currentQuestion?.type === "ordering" ? "flex-row" : "flex-col justify-center text-center"
+                } items-center min-h-[100px] md:min-h-[120px] rounded-[2rem] ${
+                  optionColors[i % 4]
+                } ${opacity} transition-all duration-300 shadow-xl p-6 gap-4 border-2 ${
+                  isCorrect ? "border-white" : "border-transparent"
+                }`}
+              >
+                {currentQuestion?.type === "ordering" && (
+                  <div className="w-12 h-12 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-2xl shadow-inner border border-white/30">
+                    {opt.position || i + 1}
                   </div>
-                );
-             })}
-          </div>
-       ) : (
-          renderQuestionType()
-       )}
+                )}
+                {opt.imageUrl && (
+                  <img
+                    src={opt.imageUrl}
+                    alt=""
+                    className="h-16 w-16 md:h-24 md:w-24 object-cover rounded-2xl shadow-lg border-2 border-white/20"
+                  />
+                )}
+                <span
+                  className={`text-white font-black drop-shadow-sm ${
+                    currentQuestion?.type === "ordering"
+                      ? "text-xl md:text-2xl text-left flex-1"
+                      : "text-2xl md:text-3xl mx-auto"
+                  }`}
+                >
+                  {opt.content}
+                </span>
+                {isCorrect && (
+                  <CheckCircle2 className="text-white w-8 h-8 md:w-10 md:h-10 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        renderQuestionType()
+      )}
     </div>
   );
 };
