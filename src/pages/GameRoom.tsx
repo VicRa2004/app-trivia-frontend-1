@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useGameStore } from "../features/game/store/useGameStore";
 import { useGameSocket } from "../features/game/socket/useGameSocket";
 import { LobbyView } from "../features/game/views/LobbyView";
@@ -9,6 +9,7 @@ import { PlayerView } from "../features/game/views/PlayerView";
 const GameRoom = () => {
   const { gamePin } = useParams<{ gamePin: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { status, isHost } = useGameStore();
   const resetGame = useGameStore((state) => state.resetGame);
   const setGamePin = useGameStore((state) => state.setGamePin);
@@ -37,10 +38,13 @@ const GameRoom = () => {
   }, [gamePin, navigate]);
 
   // Limpiar estado al desmontar o navegar fuera
+  const locationRef = useRef(location.pathname);
+  locationRef.current = location.pathname;
+
   useEffect(() => {
     return () => {
       // Solo limpiar si realmente estamos saliendo de la ruta del juego
-      if (!window.location.pathname.startsWith("/game")) {
+      if (!locationRef.current.startsWith("/game")) {
         resetGame();
       }
     };

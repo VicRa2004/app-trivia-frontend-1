@@ -3,6 +3,7 @@ import { Button } from "../../../components/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/Card";
 import { Eye, ArrowRight, Flag, CheckCircle2, Trophy, Users, BarChart3 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 const optionShapes = ["▲", "◆", "●", "■"];
 import { API_URL } from "../../../config/env";
@@ -23,6 +24,7 @@ export const HostView = ({
   onNextQuestion: () => void;
   onFinishGame: () => void;
 }) => {
+  const navigate = useNavigate();
   const {
     currentQuestion,
     questionIndex,
@@ -208,7 +210,7 @@ export const HostView = ({
         {/* Botón de dashboard */}
         <div className="mt-20">
           <Button
-            onClick={() => (window.location.href = "/dashboard")}
+            onClick={() => navigate("/dashboard")}
             className="bg-gradient-to-r from-[#1b4cfc] to-blue-600 hover:brightness-110 text-white px-12 py-5.5 rounded-full font-black text-2xl shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-none"
           >
             Finalizar y Salir

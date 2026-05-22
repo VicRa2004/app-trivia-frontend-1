@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../store/useGameStore";
 import { Trophy, CheckCircle2, AlertTriangle, Send, XCircle, Loader2, Sparkles } from "lucide-react";
 import { Card } from "../../../components/Card";
@@ -9,6 +10,7 @@ export const PlayerView = ({
 }: {
   onSubmitAnswer: (payload: string | string[], ms: number) => void;
 }) => {
+  const navigate = useNavigate();
   const {
     currentQuestion,
     playerScore,
@@ -152,7 +154,7 @@ export const PlayerView = ({
           Puntuación Final: <span className="text-yellow-300">{playerScore}</span>
         </div>
         <button
-          onClick={() => (window.location.href = "/dashboard")}
+          onClick={() => navigate("/dashboard")}
           className="bg-white text-[#1b4cfc] px-10 py-5 rounded-full font-black text-2xl shadow-lg hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
         >
           Volver al Dashboard
