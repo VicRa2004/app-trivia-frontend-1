@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/store/useAuthStore';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <Navigate to="/dashboard" replace />,
