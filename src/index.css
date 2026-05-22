@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1b4cfc;
-  --color-primary-hover: #1036c7;
-  --color-primary-light: #eef2ff;
+  --color-primary: #7f0df2;
+  --color-primary-hover: #6a0bcc;
+  --color-primary-light: #f3eefe;
 
   --color-secondary: #ffce00;
   --color-secondary-hover: #eabf00;
@@ -38,22 +38,22 @@
     --color-text-main: #f4f1f7;
     --color-text-muted: #9d95a5;
     --color-border: #2d2640;
-    --color-primary-light: #1e3a5f;
+    --color-primary-light: #2a0f47;
   }
 }
 
 @layer utilities {
   .bg-mesh-primary {
     background:
-      radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(255, 206, 0, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(127, 13, 242, 0.1) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(127, 13, 242, 0.06) 0%, transparent 50%),
       var(--color-background);
   }
 
   .dark .bg-mesh-primary {
     background:
-      radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.2) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(255, 206, 0, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(127, 13, 242, 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(160, 60, 255, 0.1) 0%, transparent 50%),
       var(--color-background);
   }
 
