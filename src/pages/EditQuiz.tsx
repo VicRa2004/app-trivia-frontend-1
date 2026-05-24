@@ -269,17 +269,6 @@ const EditQuiz = () => {
                       Sin Banner
                    </div>
                  )}
-                  {!isEditingQuiz && (
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      icon={Edit2}
-                      onClick={() => setIsEditingQuiz(true)} 
-                      className="absolute top-2 right-2 bg-white/80 hover:bg-white text-xs shadow-sm"
-                    >
-                      Editar Info
-                    </Button>
-                  )}
               </div>
               
               {isEditingQuiz && (
@@ -361,6 +350,17 @@ const EditQuiz = () => {
                   )}
                 </div>
                 <p className="text-sm text-text-muted mt-1 wrap-break-word">{quiz.description}</p>
+                {!isEditingQuiz && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    icon={Edit2}
+                    onClick={() => setIsEditingQuiz(true)} 
+                    className="mt-4 w-full border-border hover:bg-primary-light hover:text-primary"
+                  >
+                    Editar Info
+                  </Button>
+                )}
               </div>
             </Card>
 
