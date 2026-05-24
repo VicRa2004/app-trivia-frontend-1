@@ -44,7 +44,7 @@ const Dashboard = () => {
          ) : (
              <div className="font-bold text-5xl text-primary/20">{q.title.charAt(0)}</div>
          )}
-         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-text-main shadow-sm flex items-center gap-1">
+         <div className="absolute top-3 right-3 bg-surface/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-text-main shadow-sm flex items-center gap-1">
             {q.isPublic ? <><Users className="w-3 h-3" /> Público</> : <><Lock className="w-3 h-3" /> Privado</>}
          </div>
          {!isMine && q.creator && (

@@ -1,5 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import { createGameSessionFn } from "../api/game.api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createGameSessionFn, getGameHistoryFn } from "../api/game.api";
 import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../store/useGameStore";
 
@@ -17,3 +17,11 @@ export const useCreateGameSessionMutation = () => {
     },
   });
 };
+
+export const useGameHistoryQuery = () => {
+  return useQuery({
+    queryKey: ["gameHistory"],
+    queryFn: getGameHistoryFn,
+  });
+};
+

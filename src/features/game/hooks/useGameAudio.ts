@@ -4,6 +4,24 @@ import { useEffect, useRef, useCallback } from "react";
 let currentMusic: HTMLAudioElement | null = null;
 let currentMusicType: "lobby" | "battle" | "victory" | null = null;
 
+// Listener global para reproducir la música tan pronto como el usuario interactúe con el documento (soluciona bloqueo de autoplay)
+if (typeof window !== "undefined") {
+  const handleGlobalInteraction = () => {
+    if (currentMusic && currentMusic.paused) {
+      currentMusic.play()
+        .then(() => {
+          console.log(`Música (${currentMusicType}) iniciada tras interacción global.`);
+        })
+        .catch((err) => {
+          console.log("Fallo al reproducir música tras interacción global:", err);
+        });
+    }
+  };
+  window.addEventListener("click", handleGlobalInteraction, { capture: true, passive: true });
+  window.addEventListener("keydown", handleGlobalInteraction, { capture: true, passive: true });
+  window.addEventListener("touchstart", handleGlobalInteraction, { capture: true, passive: true });
+}
+
 export const useGameAudio = () => {
   const correctAudioRef = useRef<HTMLAudioElement | null>(null);
   const incorrectAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -47,8 +65,13 @@ export const useGameAudio = () => {
   const startMusic = useCallback((path: string, type: "lobby" | "battle" | "victory") => {
     if (typeof window === "undefined") return;
 
-    // Si ya está sonando esta misma música, no hacer nada
+    // Si ya está sonando esta misma música, no hacer nada (a menos que esté pausada)
     if (currentMusic && currentMusicType === type) {
+      if (currentMusic.paused) {
+        currentMusic.play().catch((err) => {
+          console.log(`Intento de reproducir música existente pausada (${type}) falló:`, err);
+        });
+      }
       return;
     }
 
@@ -65,8 +88,7 @@ export const useGameAudio = () => {
     currentMusicType = type;
 
     music.play().catch((err) => {
-      // Los navegadores a veces bloquean el autoplay si el usuario no ha interactuado
-      console.log("Autoplay de música bloqueado por el navegador. Esperando interacción:", err);
+      console.log(`Autoplay de música (${type}) bloqueado por el navegador. Esperando interacción:`, err);
     });
   }, []);
 

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { loginFn, registerFn } from '../api/auth.api';
 import { useAuthStore } from '../store/useAuthStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 export const extractErrorMessages = (error: unknown): string => {
@@ -20,13 +20,18 @@ export const extractErrorMessages = (error: unknown): string => {
 export const useLoginMutation = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
+  const location = useLocation();
 
   return useMutation({
     mutationFn: loginFn,
     onSuccess: (data) => {
       if (data.access_token) {
         setAuth(data.access_token, data.user);
-        navigate('/dashboard', { replace: true });
+        const state = location.state as { from?: { pathname: string; search?: string; hash?: string } } | null;
+        const from = state?.from?.pathname || '/dashboard';
+        const search = state?.from?.search || '';
+        const hash = state?.from?.hash || '';
+        navigate(from + search + hash, { replace: true });
       }
     },
   });

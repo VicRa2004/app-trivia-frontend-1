@@ -1,9 +1,10 @@
 import { useGameStore } from "../store/useGameStore";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
-import { Users, Play, User, Share2, Check } from "lucide-react";
+import { Users, Play, User, Share2, Check, QrCode } from "lucide-react";
 import { API_URL } from "../../../config/env";
 import { useGameAudio } from "../hooks/useGameAudio";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,14 +34,14 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
 
   const copyToClipboard = () => {
     if (!gamePin) return;
-    // Intentar copiar tanto el PIN como una invitación amigable
-    const inviteText = `¡Únete a mi trivia! Entra a la app e ingresa el PIN: ${gamePin}`;
+    const inviteLink = `${window.location.origin}/#/game/${gamePin}`;
+    const inviteText = `¡Únete a mi trivia! Haz clic en el enlace para entrar: ${inviteLink} (o usa el PIN: ${gamePin})`;
     navigator.clipboard.writeText(inviteText).then(() => {
       setCopied(true);
-      toast.success("¡Invitación copiada al portapapeles!");
+      toast.success("¡Enlace de invitación copiado!");
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {
-      toast.error("No se pudo copiar el PIN.");
+      toast.error("No se pudo copiar el enlace de invitación.");
     });
   };
 
@@ -52,32 +53,58 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
       <div className="absolute bottom-10 right-10 w-44 h-44 bg-cyan-500/5 rounded-full blur-3xl animate-pulse duration-[6s]" />
 
       {/* Tarjeta del PIN principal con Glassmorphism y sombras premium */}
-      <Card className="w-full text-center border-2 border-border p-8 md:p-12 mb-8 bg-surface/80 backdrop-blur-md shadow-xl rounded-[2.5rem] relative group">
-        <h2 className="text-sm md:text-md font-black text-gray-400 mb-2 uppercase tracking-[0.25em]">
-          PIN de Juego
-        </h2>
-        
-        {/* PIN con animación de volteo en cada dígito */}
-        <div className="text-6xl md:text-8xl font-black text-[#1b4cfc] tracking-widest my-4 flex items-center justify-center select-none">
-          {(gamePin || "000000").split("").map((digit, i) => (
-            <span
-              key={i}
-              className="inline-block animate-[flip_0.6s_ease-in-out_both] drop-shadow-sm"
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
-              {digit}
-            </span>
-          ))}
-        </div>
+      <Card className="w-full border-2 border-border p-8 md:p-12 mb-8 bg-surface/80 backdrop-blur-md shadow-xl rounded-[2.5rem] relative group">
+        <div className={`grid grid-cols-1 ${isHost ? 'md:grid-cols-2 md:divide-x md:divide-border' : 'text-center'} gap-8 items-center`}>
+          {/* Lado izquierdo: PIN y botón de copiar */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <h2 className="text-sm md:text-md font-black text-gray-400 mb-2 uppercase tracking-[0.25em]">
+              PIN de Juego
+            </h2>
+            
+            {/* PIN con animación de volteo en cada dígito */}
+            <div className="text-6xl md:text-8xl font-black text-[#1b4cfc] tracking-widest my-4 flex items-center justify-center select-none">
+              {(gamePin || "000000").split("").map((digit, i) => (
+                <span
+                  key={i}
+                  className="inline-block animate-[flip_0.6s_ease-in-out_both] drop-shadow-sm"
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                >
+                  {digit}
+                </span>
+              ))}
+            </div>
 
-        {/* Botón de Compartir PIN */}
-        <button
-          onClick={copyToClipboard}
-          className="mt-2 text-sm font-bold text-text-muted hover:text-[#1b4cfc] dark:hover:text-primary bg-surface hover:bg-[#1b4cfc]/5 dark:hover:bg-primary/10 border border-border py-2 px-4 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
-        >
-          {copied ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
-          {copied ? "¡Copiado!" : "Compartir Invitación"}
-        </button>
+            {/* Botón de Compartir PIN */}
+            <button
+              onClick={copyToClipboard}
+              className="mt-2 text-sm font-bold text-text-muted hover:text-[#1b4cfc] dark:hover:text-primary bg-surface hover:bg-[#1b4cfc]/5 dark:hover:bg-primary/10 border border-border py-2 px-4 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
+            >
+              {copied ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
+              {copied ? "¡Copiado!" : "Compartir Invitación"}
+            </button>
+          </div>
+
+          {/* Lado derecho: Código QR (solo para el host) */}
+          {isHost && (
+            <div className="flex flex-col items-center justify-center text-center md:pl-8">
+              <h2 className="text-sm md:text-md font-black text-gray-400 mb-4 uppercase tracking-[0.25em] flex items-center gap-2 justify-center">
+                <QrCode size={18} className="text-[#1b4cfc]" /> Escanea para unirte
+              </h2>
+              <div className="p-4 bg-white rounded-3xl shadow-lg border border-border flex items-center justify-center animate-[flip_0.6s_ease-in-out_both] select-none hover:scale-105 transition-all">
+                <QRCodeSVG
+                  value={`${window.location.origin}/#/game/${gamePin}`}
+                  size={160}
+                  level="H"
+                  includeMargin={false}
+                  fgColor="#1b4cfc"
+                />
+              </div>
+              <p className="text-xs font-semibold text-text-muted mt-3">
+                Los jugadores pueden unirse directamente escaneando este código
+              </p>
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* Cabecera del Listado de Jugadores */}

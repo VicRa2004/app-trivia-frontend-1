@@ -1,4 +1,4 @@
-import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createHashRouter, RouterProvider, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/store/useAuthStore';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -7,11 +7,13 @@ import CreateQuiz from '../pages/CreateQuiz';
 import EditQuiz from '../pages/EditQuiz';
 import GameRoom from '../pages/GameRoom';
 import Profile from '../pages/Profile';
+import History from '../pages/History';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = useAuthStore((state) => state.token);
+  const location = useLocation();
   
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/login" replace state={{ from: location }} />;
   return <>{children}</>;
 };
 
@@ -45,6 +47,14 @@ const router = createHashRouter([
     ),
   },
   {
+    path: '/history',
+    element: (
+      <ProtectedRoute>
+        <History />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/profile',
     element: (
       <ProtectedRoute>
@@ -69,6 +79,7 @@ const router = createHashRouter([
     ),
   },
 ]);
+
 
 export const AppRouter = () => {
   return <RouterProvider router={router} />;

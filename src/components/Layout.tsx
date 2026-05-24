@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../features/auth/store/useAuthStore";
 import { useGameStore } from "../features/game/store/useGameStore";
 import { Button } from "./Button";
-import { LogOut, User, Sun, Moon } from "lucide-react";
+import { LogOut, User, Sun, Moon, History } from "lucide-react";
 import { API_URL } from "../config/env";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -56,9 +56,20 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             {user ? (
               <>
                 <Link
+                  to="/history"
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-light hover:bg-primary/20 transition-colors no-underline text-primary"
+                  title="Historial de partidas"
+                >
+                  <History className="w-4 h-4" />
+                  <span className="text-sm font-bold hidden md:inline">
+                    Historial
+                  </span>
+                </Link>
+                <Link
                   to="/profile"
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-light hover:bg-primary/20 transition-colors no-underline"
                 >
+
                   <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/30">
                     {user.avatar?.imageUrl ? (
                       <img
