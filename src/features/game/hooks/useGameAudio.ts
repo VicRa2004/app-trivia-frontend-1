@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 
 // Singleton para mantener la referencia de la música activa y que no se duplique al renderizar componentes
 let currentMusic: HTMLAudioElement | null = null;
-let currentMusicType: "lobby" | "battle" | null = null;
+let currentMusicType: "lobby" | "battle" | "victory" | null = null;
 
 export const useGameAudio = () => {
   const correctAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -44,7 +44,7 @@ export const useGameAudio = () => {
     }
   }, [getAudio]);
 
-  const startMusic = useCallback((path: string, type: "lobby" | "battle") => {
+  const startMusic = useCallback((path: string, type: "lobby" | "battle" | "victory") => {
     if (typeof window === "undefined") return;
 
     // Si ya está sonando esta misma música, no hacer nada
@@ -70,8 +70,9 @@ export const useGameAudio = () => {
     });
   }, []);
 
-  const startLobbyMusic = useCallback(() => startMusic("/audio/lobby.wav", "lobby"), [startMusic]);
-  const startBattleMusic = useCallback(() => startMusic("/audio/battle.wav", "battle"), [startMusic]);
+  const startLobbyMusic = useCallback(() => startMusic("/audio/sala_de_espera.mp3", "lobby"), [startMusic]);
+  const startBattleMusic = useCallback(() => startMusic("/audio/preguntas.mp3", "battle"), [startMusic]);
+  const startVictoryMusic = useCallback(() => startMusic("/audio/victoria.mp3", "victory"), [startMusic]);
 
   const stopMusic = useCallback(() => {
     if (currentMusic) {
@@ -95,6 +96,7 @@ export const useGameAudio = () => {
     playTick,
     startLobbyMusic,
     startBattleMusic,
+    startVictoryMusic,
     stopMusic,
   };
 };

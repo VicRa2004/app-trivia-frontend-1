@@ -144,7 +144,7 @@ export const HostView = ({
         <div className="absolute top-10 left-10 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl animate-pulse" />
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-yellow-200/25 rounded-full blur-3xl animate-pulse delay-700" />
 
-        <h1 className="text-6xl md:text-8xl font-black text-gray-800 mb-16 drop-shadow-sm flex items-center justify-center gap-4">
+        <h1 className="text-6xl md:text-8xl font-black text-text-main mb-16 drop-shadow-sm flex items-center justify-center gap-4">
           <Trophy className="w-14 h-14 md:w-20 md:h-20 text-yellow-400 fill-yellow-400 animate-bounce" />
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1b4cfc] via-blue-600 to-[#1b4cfc]">¡Podio Final!</span>
         </h1>
@@ -158,7 +158,7 @@ export const HostView = ({
             >
               {/* Avatar Flotante */}
               <div className="relative mb-5">
-                <div className={`w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 bg-white flex items-center justify-center shadow-2xl relative z-10 transition-transform hover:scale-105 ${getAvatarBorder(p.place)}`}>
+                <div className={`w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 bg-surface flex items-center justify-center shadow-2xl relative z-10 transition-transform hover:scale-105 ${getAvatarBorder(p.place)}`}>
                   {p.avatarUrl ? (
                     <img
                       src={getFullAvatarUrl(p.avatarUrl)}
@@ -166,7 +166,7 @@ export const HostView = ({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-[#1b4cfc] font-black text-4xl">
+                    <span className="text-primary font-black text-4xl">
                       {p.username[0].toUpperCase()}
                     </span>
                   )}
@@ -184,11 +184,11 @@ export const HostView = ({
               </div>
 
               {/* Nombre e info del Jugador */}
-              <div className="font-black text-xl md:text-3xl mb-1 text-gray-800 truncate w-full drop-shadow-sm">
+              <div className="font-black text-xl md:text-3xl mb-1 text-text-main truncate w-full drop-shadow-sm">
                 {p.username}
               </div>
-              <div className="font-black text-xs md:text-base text-[#1b4cfc] mb-5 bg-[#1b4cfc]/5 border border-[#1b4cfc]/15 px-4.5 py-1.5 rounded-full shadow-sm">
-                {p.score} <span className="font-bold text-[10px] text-gray-400">pts</span>
+              <div className="font-black text-xs md:text-base text-primary mb-5 bg-primary/5 border border-primary/15 px-4.5 py-1.5 rounded-full shadow-sm">
+                {p.score} <span className="font-bold text-[10px] text-text-muted">pts</span>
               </div>
 
               {/* Columna física del podio */}
@@ -211,11 +211,104 @@ export const HostView = ({
         <div className="mt-20">
           <Button
             onClick={() => navigate("/dashboard")}
-            className="bg-gradient-to-r from-[#1b4cfc] to-blue-600 hover:brightness-110 text-white px-12 py-5.5 rounded-full font-black text-2xl shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-none"
+            className="bg-gradient-to-r from-primary to-purple-600 hover:brightness-110 text-white px-12 py-5.5 rounded-full font-black text-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-none"
           >
             Finalizar y Salir
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // Top 5 Parcial en pantalla completa al finalizar cada pregunta (una vez que se activa showRanking tras 4s de suspense)
+  if (status === "revealed" && showRanking) {
+    return (
+      <div className="flex flex-col w-full h-full max-w-4xl mx-auto animate-in fade-in pb-12">
+        {/* Barra superior de estado */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mt-4 mb-6 px-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-black text-lg text-primary bg-primary/10 px-6 py-3 rounded-full border border-primary/20 dark:border-primary/15 shadow-sm flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Pregunta {questionIndex + 1} de {questionTotal}
+            </span>
+          </div>
+
+          {/* Panel de acciones del Host */}
+          <div className="flex gap-3">
+            {questionIndex + 1 < questionTotal ? (
+              <Button
+                icon={ArrowRight}
+                onClick={onNextQuestion}
+                variant="default"
+                className="rounded-2xl shadow-xl text-lg px-8 py-3 font-extrabold hover:scale-102 transition-all border-none bg-primary text-white hover:bg-primary-hover"
+              >
+                Siguiente Pregunta
+              </Button>
+            ) : (
+              <Button
+                icon={Flag}
+                onClick={onFinishGame}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-xl text-lg px-8 py-3 font-extrabold hover:scale-102 transition-all border-none"
+              >
+                Finalizar Partida
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Card del Top 5 Parcial */}
+        <Card className="rounded-[2.5rem] shadow-2xl border-none bg-surface border border-border overflow-hidden">
+          <CardHeader className="bg-gray-50/50 dark:bg-background/50 border-b border-border pb-6 pt-8 text-center">
+            <CardTitle className="text-text-main text-4xl font-black px-4 flex items-center justify-center gap-3">
+              🏆 Top 5 Parcial
+            </CardTitle>
+            <p className="text-text-muted mt-2 font-bold text-lg">Resultados acumulados hasta el momento</p>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-8 px-8 pb-10">
+            {players.slice(0, 5).map((p, i) => (
+              <div
+                key={i}
+                className={`flex justify-between items-center bg-surface border-2 ${
+                  i === 0
+                    ? "border-yellow-400 bg-yellow-50/30 dark:bg-yellow-500/5 dark:border-yellow-500/50"
+                    : "border-border hover:border-primary/20 dark:hover:border-primary/30"
+                } rounded-[2rem] p-5 md:p-6 shadow-md transition-all duration-200 hover:-translate-y-0.5`}
+              >
+                <span className="font-black text-2xl flex items-center gap-5 text-text-main">
+                  <span
+                    className={`w-12 h-12 rounded-full ${
+                      i === 0 
+                        ? "bg-yellow-400 text-yellow-950 border-yellow-500" 
+                        : "bg-primary/10 text-primary border-primary/15"
+                    } flex items-center justify-center text-xl font-black border`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-surface border border-border flex items-center justify-center shrink-0">
+                    {p.avatarUrl ? (
+                      <img src={getFullAvatarUrl(p.avatarUrl)} alt={p.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-black text-text-muted">
+                        {p.username[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  {p.username}
+                </span>
+                <span
+                  className={`font-black ${
+                    i === 0 ? "text-amber-600 dark:text-yellow-400" : "text-primary"
+                  } text-3xl flex items-center gap-2`}
+                >
+                  {p.score} <span className="text-sm text-text-muted font-semibold mt-2">pts</span>
+                </span>
+              </div>
+            ))}
+            {players.length === 0 && (
+              <div className="text-center text-text-muted font-bold py-12 text-xl">Nadie se ha unido todavía.</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -243,14 +336,14 @@ export const HostView = ({
       {/* Barra superior de estado */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mt-4 mb-6 px-2">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-black text-lg text-[#1b4cfc] bg-[#1b4cfc]/10 px-6 py-3 rounded-full border border-[#1b4cfc]/10 shadow-sm flex items-center gap-2">
+          <span className="font-black text-lg text-primary bg-primary/10 px-6 py-3 rounded-full border border-primary/20 dark:border-primary/15 shadow-sm flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             {currentQuestion
               ? `Pregunta ${questionIndex + 1} de ${questionTotal}`
               : "Partida Lista"}
           </span>
           {status === "playing" && answersCount && (
-            <span className="font-black text-lg text-[#1b4cfc] bg-[#1b4cfc]/10 px-6 py-3 rounded-full border border-[#1b4cfc]/20 shadow-sm flex items-center gap-2 animate-pulse">
+            <span className="font-black text-lg text-primary bg-primary/10 px-6 py-3 rounded-full border border-primary/30 dark:border-primary/20 shadow-sm flex items-center gap-2 animate-pulse">
               <Users className="w-5 h-5" />
               Respuestas: {answersCount.answered} / {answersCount.total}
             </span>
@@ -264,7 +357,7 @@ export const HostView = ({
               icon={Eye}
               onClick={onShowAnswer}
               variant="secondary"
-              className="rounded-2xl shadow-md text-lg px-6 py-3 border-2 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-extrabold"
+              className="rounded-2xl shadow-md text-lg px-6 py-3 border-2 border-border bg-surface hover:bg-surface/80 text-text-main font-extrabold"
             >
               Revelar Respuesta
             </Button>
@@ -272,7 +365,8 @@ export const HostView = ({
             <Button
               icon={ArrowRight}
               onClick={onNextQuestion}
-              className="bg-[#1b4cfc] hover:bg-[#1036c7] text-white rounded-2xl shadow-xl text-lg px-8 py-3 font-extrabold hover:scale-102 transition-all"
+              variant="default"
+              className="rounded-2xl shadow-xl text-lg px-8 py-3 font-extrabold hover:scale-102 transition-all border-none bg-primary text-white hover:bg-primary-hover"
             >
               {!currentQuestion ? "Lanzar 1ra Pregunta" : "Siguiente Pregunta"}
             </Button>
@@ -305,7 +399,7 @@ export const HostView = ({
 
       {/* Caja de Pregunta Principal */}
       <div className="flex flex-col lg:flex-row gap-6 mb-8">
-        <Card className="p-8 lg:p-12 shadow-2xl border-none rounded-[2.5rem] bg-white relative overflow-hidden flex-1 border border-gray-100/80 min-h-[220px] flex flex-col justify-center">
+        <Card className="p-8 lg:p-12 shadow-2xl border-none rounded-[2.5rem] bg-surface relative overflow-hidden flex-1 border border-border min-h-[220px] flex flex-col justify-center">
           {currentQuestion?.imageUrl && (
             <div className="absolute inset-0 z-0 opacity-[0.03]">
               <img
@@ -319,20 +413,20 @@ export const HostView = ({
           {currentQuestion?.imageUrl ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
               <div className="lg:col-span-7 text-center lg:text-left flex flex-col justify-center h-full">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black leading-tight text-gray-800 animate-in slide-in-from-top-4 fade-in">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black leading-tight text-text-main animate-in slide-in-from-top-4 fade-in">
                   {currentQuestion?.text || "Esperando para comenzar la partida..."}
                 </h2>
               </div>
               <div className="lg:col-span-5 flex justify-center">
                 <img
                   src={currentQuestion.imageUrl}
-                  className="max-h-72 lg:max-h-96 w-full object-cover rounded-[2rem] shadow-2xl border-4 border-gray-50 transform hover:scale-[1.01] transition-transform duration-300"
+                  className="max-h-72 lg:max-h-96 w-full object-cover rounded-[2rem] shadow-2xl border-4 border-border transform hover:scale-[1.01] transition-transform duration-300"
                   alt="Question"
                 />
               </div>
             </div>
           ) : (
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight text-gray-800 relative z-10 animate-in slide-in-from-top-4 fade-in text-center py-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight text-text-main relative z-10 animate-in slide-in-from-top-4 fade-in text-center py-6">
               {currentQuestion?.text || "Esperando para comenzar la partida..."}
             </h2>
           )}
@@ -428,11 +522,11 @@ export const HostView = ({
       )}
 
       {/* Respuesta Corta (Short Answer) al revelarse */}
-      {status === "revealed" && !showRanking && currentQuestion && currentQuestion.type === "short_answer" && (
-        <Card className="mt-8 rounded-[2rem] shadow-xl border-none bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 animate-in slide-in-from-bottom-6">
-          <CardHeader className="border-b border-emerald-100 pb-4 pt-6">
-            <CardTitle className="text-emerald-700 text-2xl font-black px-4 flex items-center gap-2">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600 animate-pulse" /> Respuestas Válidas
+      {status === "revealed" && currentQuestion && currentQuestion.type === "short_answer" && (
+        <Card className="mt-8 rounded-[2rem] shadow-xl border-none bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-800/30 animate-in slide-in-from-bottom-6">
+          <CardHeader className="border-b border-emerald-100 dark:border-emerald-800/30 pb-4 pt-6">
+            <CardTitle className="text-emerald-700 dark:text-emerald-400 text-2xl font-black px-4 flex items-center gap-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 animate-pulse" /> Respuestas Válidas
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 px-8 pb-8">
@@ -442,7 +536,7 @@ export const HostView = ({
                 .map((opt, i) => (
                   <div
                     key={i}
-                    className="text-2xl md:text-3xl font-black text-emerald-800 text-center bg-white rounded-2xl py-4 px-6 shadow-sm border border-emerald-100"
+                    className="text-2xl md:text-3xl font-black text-emerald-800 dark:text-emerald-300 text-center bg-surface rounded-2xl py-4 px-6 shadow-sm border border-border"
                   >
                     {opt.content}
                   </div>
@@ -452,60 +546,6 @@ export const HostView = ({
         </Card>
       )}
 
-      {/* Top 5 Parcial al finalizar cada pregunta */}
-      {status === "revealed" && showRanking && (
-        <Card className="mt-8 rounded-[2.5rem] shadow-xl border-none bg-white border border-gray-100 animate-in slide-in-from-bottom-8 duration-500">
-          <CardHeader className="bg-gray-50/50 rounded-t-[2.5rem] border-b border-gray-100 pb-4 pt-6">
-            <CardTitle className="text-gray-800 text-3xl font-black px-4 flex items-center gap-2">
-              🏆 Top 5 Parcial
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6 px-6 pb-8">
-            {players.slice(0, 5).map((p, i) => (
-              <div
-                key={i}
-                className={`flex justify-between items-center bg-white border-2 ${
-                  i === 0
-                    ? "border-yellow-400 bg-yellow-50/30"
-                    : "border-gray-100 hover:border-[#1b4cfc]/20"
-                } rounded-[1.5rem] p-4 md:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5`}
-              >
-                <span className="font-black text-xl md:text-2xl flex items-center gap-4 text-gray-800">
-                  <span
-                    className={`w-10 h-10 rounded-full ${
-                      i === 0 ? "bg-yellow-400 text-yellow-950" : "bg-[#1b4cfc]/10 text-[#1b4cfc]"
-                    } flex items-center justify-center text-lg font-black border ${
-                      i === 0 ? "border-yellow-500" : "border-[#1b4cfc]/15"
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-                    {p.avatarUrl ? (
-                      <img src={getFullAvatarUrl(p.avatarUrl)} alt={p.username} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs font-black text-gray-400">
-                        {p.username[0].toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  {p.username}
-                </span>
-                <span
-                  className={`font-black ${
-                    i === 0 ? "text-amber-600" : "text-[#1b4cfc]"
-                  } text-2xl flex items-center gap-1.5`}
-                >
-                  {p.score} <span className="text-sm text-gray-400 font-semibold mt-1.5">pts</span>
-                </span>
-              </div>
-            ))}
-            {players.length === 0 && (
-              <div className="text-center text-gray-400 font-bold py-8">Nadie se ha unido todavía.</div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

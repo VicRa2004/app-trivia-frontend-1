@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../store/useGameStore";
-import { Trophy, CheckCircle2, AlertTriangle, Send, XCircle, Loader2, Sparkles } from "lucide-react";
+import { Trophy, CheckCircle2, AlertTriangle, Send, XCircle, Sparkles } from "lucide-react";
 import { Card } from "../../../components/Card";
 import { useGameAudio } from "../hooks/useGameAudio";
 
@@ -19,7 +19,7 @@ export const PlayerView = ({
     correctOptions,
     playerLastResult,
   } = useGameStore();
-  const { playTick } = useGameAudio();
+  const { playTick, playCorrect, playIncorrect } = useGameAudio();
 
   const [interaction, setInteraction] = useState<{
     qId?: string | null;
@@ -46,6 +46,23 @@ export const PlayerView = ({
       return () => clearTimeout(to);
     }
   }, [status]);
+
+  // Reproducir efectos de sonido correspondientes al mostrar la pantalla de resultados del jugador
+  useEffect(() => {
+    if (showResultScreen) {
+      const answered = playerLastResult !== null;
+      const isCorrect = playerLastResult?.isCorrect || false;
+      if (answered) {
+        if (isCorrect) {
+          playCorrect();
+        } else {
+          playIncorrect();
+        }
+      } else {
+        playIncorrect(); // Sonido de error si se acabó el tiempo
+      }
+    }
+  }, [showResultScreen, playerLastResult, playCorrect, playIncorrect]);
 
   const [textAnswer, setTextAnswer] = useState("");
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
@@ -369,9 +386,9 @@ export const PlayerView = ({
 
                 {/* Indicador de Respuesta Registrada sobre la opción */}
                 {hasSent && isSelected && (
-                  <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2">
-                    <Loader2 className="w-10 h-10 text-white animate-spin drop-shadow" />
-                    <span className="text-white font-bold text-xs bg-black/50 px-3 py-1.5 rounded-full border border-white/10 uppercase tracking-wider">Registrado</span>
+                  <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2 animate-in zoom-in-90 duration-300">
+                    <Sparkles className="w-12 h-12 text-yellow-300 drop-shadow animate-pulse" />
+                    <span className="text-white font-black text-sm bg-[#1b4cfc]/90 px-4 py-1.5 rounded-full border border-white/10 uppercase tracking-wider">¡Listo!</span>
                   </div>
                 )}
               </button>
@@ -430,9 +447,9 @@ export const PlayerView = ({
 
               {/* Indicador sobre la opción seleccionada */}
               {hasSent && isSelected && (
-                <div className="flex flex-col items-center gap-1 shrink-0 bg-black/30 border border-white/20 rounded-2xl p-2.5 backdrop-blur-[2px] animate-pulse">
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
-                  <span className="text-[10px] text-white/95 uppercase tracking-wider font-extrabold">Enviado</span>
+                <div className="flex flex-col items-center gap-1 shrink-0 bg-[#1b4cfc]/90 border-2 border-white/30 rounded-2xl p-3 shadow-lg scale-105 animate-in zoom-in duration-300">
+                  <CheckCircle2 className="w-7 h-7 text-white animate-bounce" />
+                  <span className="text-xs text-white uppercase tracking-wider font-black">¡Listo!</span>
                 </div>
               )}
             </button>
@@ -492,9 +509,9 @@ export const PlayerView = ({
 
       {/* Banner premium de espera si ya contestó y el juego sigue activo */}
       {interaction.payloadSent && status === "playing" && (
-        <div className="flex items-center justify-center gap-3.5 bg-gradient-to-r from-[#1b4cfc]/5 via-indigo-500/5 to-[#1b4cfc]/5 border-2 border-dashed border-[#1b4cfc]/25 py-5 px-6 rounded-[2rem] text-[#1b4cfc] font-black text-xl md:text-2xl my-2 animate-pulse shadow-sm">
-          <Loader2 className="w-6 h-6 animate-spin text-[#1b4cfc]" />
-          <span>¡Respuesta registrada con éxito! Esperando a otros jugadores...</span>
+        <div className="flex items-center justify-center gap-3.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-2 border-dashed border-emerald-500/35 py-5 px-6 rounded-[2rem] text-emerald-600 dark:text-emerald-400 font-black text-xl md:text-2xl my-2 animate-pulse shadow-sm">
+          <Sparkles className="w-6 h-6 text-emerald-500 dark:text-emerald-400 animate-spin duration-[4000ms]" />
+          <span>✨ ¡Respuesta registrada! Esperando a que todos contesten...</span>
         </div>
       )}
 

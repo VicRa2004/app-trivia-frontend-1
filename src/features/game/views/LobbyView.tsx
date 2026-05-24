@@ -23,7 +23,11 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
     startLobbyMusic();
     return () => {
       // Detenemos la música del lobby cuando el usuario sale del lobby (sea por iniciar partida o por salir al dashboard)
-      stopMusic();
+      // Ojo: Solo la detenemos si el estado del juego sigue siendo "lobby" para evitar que al cambiar a "playing" se silencie
+      // la música de batalla recién iniciada en el socket.
+      if (useGameStore.getState().status === "lobby") {
+        stopMusic();
+      }
     };
   }, [startLobbyMusic, stopMusic]);
 
@@ -48,7 +52,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
       <div className="absolute bottom-10 right-10 w-44 h-44 bg-cyan-500/5 rounded-full blur-3xl animate-pulse duration-[6s]" />
 
       {/* Tarjeta del PIN principal con Glassmorphism y sombras premium */}
-      <Card className="w-full text-center border-2 border-gray-100 p-8 md:p-12 mb-8 bg-white/80 backdrop-blur-md shadow-xl rounded-[2.5rem] relative group">
+      <Card className="w-full text-center border-2 border-border p-8 md:p-12 mb-8 bg-surface/80 backdrop-blur-md shadow-xl rounded-[2.5rem] relative group">
         <h2 className="text-sm md:text-md font-black text-gray-400 mb-2 uppercase tracking-[0.25em]">
           PIN de Juego
         </h2>
@@ -69,7 +73,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
         {/* Botón de Compartir PIN */}
         <button
           onClick={copyToClipboard}
-          className="mt-2 text-sm font-bold text-gray-500 hover:text-[#1b4cfc] bg-gray-50 hover:bg-[#1b4cfc]/5 border border-gray-100 hover:border-[#1b4cfc]/10 py-2 px-4 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
+          className="mt-2 text-sm font-bold text-text-muted hover:text-[#1b4cfc] dark:hover:text-primary bg-surface hover:bg-[#1b4cfc]/5 dark:hover:bg-primary/10 border border-border py-2 px-4 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
         >
           {copied ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
           {copied ? "¡Copiado!" : "Compartir Invitación"}
@@ -78,7 +82,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
 
       {/* Cabecera del Listado de Jugadores */}
       <div className="w-full flex justify-between items-center mb-6 px-4">
-        <h3 className="text-2xl font-black flex items-center gap-3 text-gray-800">
+        <h3 className="text-2xl font-black flex items-center gap-3 text-text-main">
           <Users className="text-[#1b4cfc] w-7 h-7" /> Jugadores unidos:{" "}
           <span className="text-[#1b4cfc] bg-[#1b4cfc]/10 px-3 py-1 rounded-xl text-xl font-black border border-[#1b4cfc]/15">
             {players.length}
@@ -101,12 +105,12 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
         {players.map((p, i) => (
           <div
             key={i}
-            className="bg-white hover:bg-gray-50 hover:-translate-y-1 transition-all border border-gray-100 text-gray-800 px-4 py-5 rounded-[2rem] font-bold text-center shadow-md flex flex-col items-center gap-3 relative group animate-in zoom-in duration-300"
+            className="bg-surface hover:bg-surface/80 hover:-translate-y-1 transition-all border border-border text-text-main px-4 py-5 rounded-[2rem] font-bold text-center shadow-md flex flex-col items-center gap-3 relative group animate-in zoom-in duration-300"
             style={{ animationDelay: `${i * 0.05}s` }}
           >
             {/* Contenedor de Avatar con efecto hover */}
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#1b4cfc] to-cyan-500 p-0.5 shadow-md transition-all group-hover:scale-105">
-              <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white">
+              <div className="w-full h-full rounded-full bg-surface flex items-center justify-center overflow-hidden border-2 border-surface">
                 {p.avatarUrl ? (
                   <img
                     src={getFullAvatarUrl(p.avatarUrl)}
@@ -120,17 +124,17 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
             </div>
             
             {/* Nombre del jugador */}
-            <span className="text-md font-black tracking-tight text-gray-700 truncate w-full px-2">
+            <span className="text-md font-black tracking-tight text-text-main truncate w-full px-2">
               {p.username}
             </span>
           </div>
         ))}
 
         {players.length === 0 && (
-          <div className="col-span-full py-16 text-center text-gray-400 font-extrabold text-xl bg-white/60 backdrop-blur-sm rounded-[2.5rem] border-4 border-dashed border-gray-100">
+          <div className="col-span-full py-16 text-center text-text-muted font-extrabold text-xl bg-surface/60 backdrop-blur-sm rounded-[2.5rem] border-4 border-dashed border-border">
             <span className="inline-block animate-bounce text-4xl mb-3">⏳</span>
             <p>Esperando a que se unan los jugadores...</p>
-            <p className="text-sm font-semibold text-gray-400/80 mt-1">¡Comparte el PIN para empezar la diversión!</p>
+            <p className="text-sm font-semibold text-text-muted/80 mt-1">¡Comparte el PIN para empezar la diversión!</p>
           </div>
         )}
       </div>

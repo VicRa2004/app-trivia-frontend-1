@@ -9,7 +9,7 @@ import { useGameAudio } from "../hooks/useGameAudio";
 export const useGameSocket = (gamePin: string | null) => {
   const socketRef = useRef<Socket | null>(null);
   const token = useAuthStore((state) => state.token);
-  const { playCorrect, playIncorrect, startLobbyMusic, startBattleMusic, stopMusic } = useGameAudio();
+  const { playTick, startLobbyMusic, startBattleMusic, startVictoryMusic, stopMusic } = useGameAudio();
 
   const setPlayers = useGameStore((state) => state.setPlayers);
   const setStatus = useGameStore((state) => state.setStatus);
@@ -34,8 +34,6 @@ export const useGameSocket = (gamePin: string | null) => {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      toast.success("¡Conectado al servidor de juegos!", { id: "socket-connect" });
-      
       socket.emit("join_game", { gamePin, token }, (response: any) => {
         if (response && response.success) {
           if (response.isHost !== undefined) {
@@ -59,6 +57,8 @@ export const useGameSocket = (gamePin: string | null) => {
             startLobbyMusic();
           } else if (status === "playing") {
             startBattleMusic();
+          } else if (status === "finished") {
+            startVictoryMusic();
           } else {
             stopMusic();
           }
@@ -94,19 +94,23 @@ export const useGameSocket = (gamePin: string | null) => {
 
     socket.on("player_joined", (payload) => {
       if (payload.playersList) {
-        const oldPlayers = useGameStore.getState().players;
         setPlayers(payload.playersList);
-        
-        // Si hay un jugador nuevo, notificar con toast
-        if (payload.player && !oldPlayers.some(p => p.username === payload.player)) {
-          toast.info(`👋 ¡${payload.player} se ha unido al juego!`);
+      }
+    });
+
+    socket.on("player_disconnected", (payload) => {
+      if (payload.playersList) {
+        setPlayers(payload.playersList);
+        if (payload.player) {
+          toast.warning(`🔌 ${payload.player} se ha desconectado de la partida.`, {
+            id: `player-disconnect-${payload.player}`
+          });
         }
       }
     });
 
     socket.on("game_started", () => {
       setStatus("playing");
-      toast.info("🚀 ¡La partida ha comenzado!");
       startBattleMusic();
     });
 
@@ -131,12 +135,8 @@ export const useGameSocket = (gamePin: string | null) => {
         });
         setAnswerError(null);
         
-        // Reproducir efecto
-        if (payload.isCorrect) {
-          playCorrect();
-        } else {
-          playIncorrect();
-        }
+        // Reproducir efecto neutro de confirmación
+        playTick();
       } else {
         setPlayerLastResult({
           isCorrect: false,
@@ -146,7 +146,7 @@ export const useGameSocket = (gamePin: string | null) => {
         setAnswerError(
           payload.message || "Demasiado tarde, cupo de ganadores lleno",
         );
-        playIncorrect();
+        playTick();
       }
     });
 
@@ -161,8 +161,7 @@ export const useGameSocket = (gamePin: string | null) => {
 
     socket.on("game_finished", (payload) => {
       if (payload.podium) setFinished(payload.podium);
-      stopMusic();
-      toast.success("🏆 ¡El juego ha terminado!");
+      startVictoryMusic();
     });
 
     socket.on("error", (err) => {
@@ -203,8 +202,10 @@ export const useGameSocket = (gamePin: string | null) => {
     socketRef.current?.emit("show_correct_answer", { gamePin, token });
   const emitFinishGame = () =>
     socketRef.current?.emit("finish_game", { gamePin, token });
-  const emitStartGame = () =>
+  const emitStartGame = () => {
+    startBattleMusic();
     socketRef.current?.emit("start_game", { gamePin, token });
+  };
 
   return {
     emitStartGame,
