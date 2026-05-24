@@ -1,12 +1,15 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { useGameStore } from "../store/useGameStore";
 
 // Singleton para mantener la referencia de la música activa y que no se duplique al renderizar componentes
 let currentMusic: HTMLAudioElement | null = null;
 let currentMusicType: "lobby" | "battle" | "victory" | null = null;
+let isAudioMuted = typeof window !== "undefined" ? localStorage.getItem("audio-muted") === "true" : false;
 
 // Listener global para reproducir la música tan pronto como el usuario interactúe con el documento (soluciona bloqueo de autoplay)
 if (typeof window !== "undefined") {
   const handleGlobalInteraction = () => {
+    if (isAudioMuted) return;
     if (currentMusic && currentMusic.paused) {
       currentMusic.play()
         .then(() => {
@@ -23,6 +26,7 @@ if (typeof window !== "undefined") {
 }
 
 export const useGameAudio = () => {
+  const [muted, setMuted] = useState(isAudioMuted);
   const correctAudioRef = useRef<HTMLAudioElement | null>(null);
   const incorrectAudioRef = useRef<HTMLAudioElement | null>(null);
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -38,6 +42,7 @@ export const useGameAudio = () => {
   }, []);
 
   const playCorrect = useCallback(() => {
+    if (isAudioMuted) return;
     const audio = getAudio(correctAudioRef, "/audio/correct.wav");
     if (audio) {
       audio.currentTime = 0;
@@ -46,6 +51,7 @@ export const useGameAudio = () => {
   }, [getAudio]);
 
   const playIncorrect = useCallback(() => {
+    if (isAudioMuted) return;
     const audio = getAudio(incorrectAudioRef, "/audio/incorrect.wav");
     if (audio) {
       audio.currentTime = 0;
@@ -54,6 +60,7 @@ export const useGameAudio = () => {
   }, [getAudio]);
 
   const playTick = useCallback(() => {
+    if (isAudioMuted) return;
     const audio = getAudio(tickAudioRef, "/audio/tick.wav");
     if (audio) {
       audio.currentTime = 0;
@@ -64,6 +71,7 @@ export const useGameAudio = () => {
 
   const startMusic = useCallback((path: string, type: "lobby" | "battle" | "victory") => {
     if (typeof window === "undefined") return;
+    if (isAudioMuted) return;
 
     // Si ya está sonando esta misma música, no hacer nada (a menos que esté pausada)
     if (currentMusic && currentMusicType === type) {
@@ -104,6 +112,30 @@ export const useGameAudio = () => {
     }
   }, []);
 
+  const toggleMute = useCallback(() => {
+    isAudioMuted = !isAudioMuted;
+    setMuted(isAudioMuted);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("audio-muted", String(isAudioMuted));
+    }
+    if (isAudioMuted) {
+      if (currentMusic) {
+        currentMusic.pause();
+        currentMusic = null;
+        currentMusicType = null;
+      }
+    } else {
+      const gameStatus = useGameStore.getState().status;
+      if (gameStatus === "lobby") {
+        startLobbyMusic();
+      } else if (gameStatus === "playing") {
+        startBattleMusic();
+      } else if (gameStatus === "finished") {
+        startVictoryMusic();
+      }
+    }
+  }, [startLobbyMusic, startBattleMusic, startVictoryMusic]);
+
   // Limpiar referencias locales al desmontar el componente (opcional)
   useEffect(() => {
     return () => {
@@ -120,5 +152,7 @@ export const useGameAudio = () => {
     startBattleMusic,
     startVictoryMusic,
     stopMusic,
+    toggleMute,
+    muted,
   };
 };

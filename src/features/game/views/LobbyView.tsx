@@ -1,7 +1,7 @@
 import { useGameStore } from "../store/useGameStore";
 import { Button } from "../../../components/Button";
 import { Card } from "../../../components/Card";
-import { Users, Play, User, Share2, Check, QrCode } from "lucide-react";
+import { Users, Play, User, Share2, Check, QrCode, Volume2, VolumeX } from "lucide-react";
 import { API_URL } from "../../../config/env";
 import { useGameAudio } from "../hooks/useGameAudio";
 import { QRCodeSVG } from "qrcode.react";
@@ -16,7 +16,7 @@ const getFullAvatarUrl = (url?: string) => {
 
 export const LobbyView = ({ onStart }: { onStart: () => void }) => {
   const { gamePin, players, isHost } = useGameStore();
-  const { startLobbyMusic, stopMusic } = useGameAudio();
+  const { startLobbyMusic, stopMusic, toggleMute, muted } = useGameAudio();
   const [copied, setCopied] = useState(false);
 
   // Iniciar la música del Lobby al montar el componente
@@ -48,6 +48,15 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
   return (
     <div className="flex flex-col items-center justify-center p-6 w-full max-w-4xl mx-auto min-h-[75vh] animate-in slide-in-from-bottom-8 duration-500 relative overflow-hidden">
       
+      {/* Botón Flotante de Control de Música */}
+      <button
+        onClick={toggleMute}
+        className="absolute top-4 right-4 z-50 p-3 bg-surface/80 dark:bg-surface/80 backdrop-blur-md rounded-full border border-border text-[#1b4cfc] dark:text-primary shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+        title={muted ? "Activar música" : "Silenciar música"}
+      >
+        {muted ? <VolumeX size={20} /> : <Volume2 size={20} className={muted ? "" : "animate-pulse"} />}
+      </button>
+
       {/* Elementos decorativos animados en el fondo */}
       <div className="absolute top-10 left-10 w-32 h-32 bg-[#1b4cfc]/5 rounded-full blur-2xl animate-pulse duration-[4s]" />
       <div className="absolute bottom-10 right-10 w-44 h-44 bg-cyan-500/5 rounded-full blur-3xl animate-pulse duration-[6s]" />
@@ -57,7 +66,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
         <div className={`grid grid-cols-1 ${isHost ? 'md:grid-cols-2 md:divide-x md:divide-border' : 'text-center'} gap-8 items-center`}>
           {/* Lado izquierdo: PIN y botón de copiar */}
           <div className="flex flex-col items-center justify-center text-center">
-            <h2 className="text-sm md:text-md font-black text-gray-400 mb-2 uppercase tracking-[0.25em]">
+            <h2 className="text-sm md:text-md font-black text-text-muted mb-2 uppercase tracking-[0.25em]">
               PIN de Juego
             </h2>
             
@@ -87,7 +96,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
           {/* Lado derecho: Código QR (solo para el host) */}
           {isHost && (
             <div className="flex flex-col items-center justify-center text-center md:pl-8">
-              <h2 className="text-sm md:text-md font-black text-gray-400 mb-4 uppercase tracking-[0.25em] flex items-center gap-2 justify-center">
+              <h2 className="text-sm md:text-md font-black text-text-muted mb-4 uppercase tracking-[0.25em] flex items-center gap-2 justify-center">
                 <QrCode size={18} className="text-[#1b4cfc]" /> Escanea para unirte
               </h2>
               <div className="p-4 bg-white rounded-3xl shadow-lg border border-border flex items-center justify-center animate-[flip_0.6s_ease-in-out_both] select-none hover:scale-105 transition-all">
@@ -145,7 +154,7 @@ export const LobbyView = ({ onStart }: { onStart: () => void }) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User className="w-8 h-8 text-gray-400" />
+                  <User className="w-8 h-8 text-text-muted" />
                 )}
               </div>
             </div>

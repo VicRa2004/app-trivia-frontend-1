@@ -31,25 +31,11 @@ export const PlayerView = ({
     startedAt: Date.now(),
   });
 
-  const [showResultScreen, setShowResultScreen] = useState(false);
   const lastSecondRef = useRef<number>(-1);
 
-  if (status !== "revealed" && showResultScreen) {
-    setShowResultScreen(false);
-  }
-
+  // Reproducir efectos de sonido correspondientes al revelarse la respuesta
   useEffect(() => {
     if (status === "revealed") {
-      const to = setTimeout(() => {
-        setShowResultScreen(true);
-      }, 4000); // Acortado un poco a 4s para mejorar el ritmo de juego
-      return () => clearTimeout(to);
-    }
-  }, [status]);
-
-  // Reproducir efectos de sonido correspondientes al mostrar la pantalla de resultados del jugador
-  useEffect(() => {
-    if (showResultScreen) {
       const answered = playerLastResult !== null;
       const isCorrect = playerLastResult?.isCorrect || false;
       if (answered) {
@@ -62,7 +48,7 @@ export const PlayerView = ({
         playIncorrect(); // Sonido de error si se acabó el tiempo
       }
     }
-  }, [showResultScreen, playerLastResult, playCorrect, playIncorrect]);
+  }, [status, playerLastResult, playCorrect, playIncorrect]);
 
   const [textAnswer, setTextAnswer] = useState("");
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
@@ -180,73 +166,17 @@ export const PlayerView = ({
     );
   }
 
-  if (status === "revealed" && showResultScreen) {
-    const answered = playerLastResult !== null;
-    const isCorrect = playerLastResult?.isCorrect || false;
-    const pointsScored = playerLastResult?.pointsScored || 0;
 
-    return (
-      <div
-        className={`flex flex-col items-center justify-center min-h-[75vh] w-full text-white animate-in zoom-in-95 duration-500 rounded-[2.5rem] p-8 shadow-3xl relative overflow-hidden ${
-          !answered
-            ? "bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-600 shadow-orange-500/30"
-            : isCorrect
-            ? "bg-gradient-to-tr from-emerald-500 via-teal-500 to-green-600 shadow-green-500/30"
-            : "bg-gradient-to-tr from-red-600 via-rose-500 to-[#1b4cfc]/80 shadow-red-500/30"
-        }`}
-      >
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-        
-        {!answered ? (
-          <div className="flex flex-col items-center animate-bounce duration-1000">
-            <AlertTriangle className="w-36 h-36 mb-6 text-white drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)]" />
-            <h1 className="text-5xl font-black mb-2 text-center tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]">¡Tiempo Agotado!</h1>
-            <p className="text-xl font-bold text-white/90 mb-6 text-center max-w-sm">No respondiste esta pregunta a tiempo. ¡Acelera en la próxima! ⚡</p>
-          </div>
-        ) : isCorrect ? (
-          <div className="flex flex-col items-center animate-in slide-in-from-bottom-8 duration-300">
-            <div className="relative">
-              <CheckCircle2 className="w-36 h-36 mb-6 text-white drop-shadow-[0_10px_25px_rgba(255,255,255,0.4)] animate-pulse" />
-              <Sparkles className="absolute -top-2 -right-2 w-10 h-10 text-yellow-300 animate-spin duration-[3000ms]" />
-              <Sparkles className="absolute -bottom-2 -left-2 w-8 h-8 text-yellow-200 animate-bounce" />
-            </div>
-            <h1 className="text-6xl font-black mb-3 text-center tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.2)]">¡Correcto!</h1>
-            <div className="text-4xl font-black bg-white/20 hover:bg-white/25 px-10 py-4 rounded-full mb-8 text-yellow-300 border-2 border-white/30 shadow-inner transition-all scale-105">
-              +{pointsScored} <span className="text-lg text-white font-bold">pts</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center animate-in slide-in-from-bottom-8 duration-300">
-            <XCircle className="w-36 h-36 mb-6 text-white drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)]" />
-            <h1 className="text-5xl font-black mb-2 text-center tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]">¡Incorrecto!</h1>
-            <p className="text-xl font-bold text-white/90 mb-6 text-center max-w-sm">¡Oh no! No te rindas, mantén la concentración. 🧠</p>
-          </div>
-        )}
-
-        {currentQuestion?.type === "short_answer" && (
-          <div className="mt-4 bg-black/10 border-2 border-white/20 rounded-[2rem] p-6 text-center w-full max-w-md shadow-inner backdrop-blur-sm animate-in fade-in-50 duration-500">
-            <p className="text-xs font-bold uppercase tracking-wider mb-1.5 text-white/60">Respuesta correcta</p>
-            <p className="text-3xl font-black text-white drop-shadow-sm">{currentQuestion.options[0]?.content || "No disponible"}</p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3.5 text-2xl font-black bg-white/20 border-2 border-white/30 px-8 py-4.5 rounded-full mt-8 shadow-xl hover:scale-102 transition-transform cursor-default">
-          <Trophy className="w-7 h-7 text-yellow-300 fill-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" /> 
-          <span>Puntuación Total: <span className="text-yellow-300">{playerScore}</span></span>
-        </div>
-      </div>
-    );
-  }
 
   const renderQuestionType = () => {
     if (!currentQuestion) return null;
 
     if (currentQuestion.type === "short_answer") {
       return (
-        <div className="flex flex-col gap-4 mt-8 w-full animate-in slide-in-from-bottom-8 duration-300">
+        <div className="flex flex-col gap-3 mt-4 w-full animate-in slide-in-from-bottom-8 duration-300">
           <input
             type="text"
-            className="w-full text-center text-2xl md:text-3xl font-black p-6 rounded-[2rem] border-4 border-gray-200 bg-white text-gray-800 focus:border-[#1b4cfc] outline-none shadow-lg transition-all focus:scale-[1.01]"
+            className="w-full text-center text-xl md:text-2xl font-black p-4 md:p-5 rounded-[1.5rem] md:rounded-[2rem] border-4 border-border bg-surface text-text-main focus:border-[#1b4cfc] outline-none shadow-lg transition-all focus:scale-[1.01]"
             placeholder="Escribe tu respuesta aquí..."
             value={textAnswer}
             onChange={(e) => setTextAnswer(e.target.value)}
@@ -255,9 +185,9 @@ export const PlayerView = ({
           <button
             onClick={() => handleSubmit(textAnswer)}
             disabled={interaction.payloadSent || !textAnswer.trim()}
-            className="mt-4 bg-gradient-to-r from-[#1b4cfc] to-[#1036c7] text-white py-6 rounded-[2rem] text-2xl font-black flex justify-center items-center gap-3 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-xl cursor-pointer"
+            className="mt-3 bg-gradient-to-r from-[#1b4cfc] to-[#1036c7] text-white py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] text-xl md:text-2xl font-black flex justify-center items-center gap-2.5 hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-xl cursor-pointer"
           >
-            <Send size={28} /> Enviar Respuesta
+            <Send size={24} /> Enviar Respuesta
           </button>
         </div>
       );
@@ -273,15 +203,15 @@ export const PlayerView = ({
       };
 
       return (
-        <div className="flex flex-col gap-4 mt-4 flex-1 w-full animate-in fade-in duration-300">
-          <div className="text-center font-bold text-gray-600 text-lg mb-2 bg-[#1b4cfc]/10 py-3 px-6 rounded-2xl border border-[#1b4cfc]/10">
+        <div className="flex flex-col gap-3 mt-3 flex-1 w-full animate-in fade-in duration-300">
+          <div className="text-center font-bold text-text-muted text-base md:text-lg mb-2 bg-[#1b4cfc]/10 dark:bg-[#1b4cfc]/20 py-2.5 px-5 rounded-xl border border-[#1b4cfc]/10 dark:border-[#1b4cfc]/20">
             Toca las opciones en el orden correcto
           </div>
-          <div className="flex justify-center gap-3 mb-4 h-16">
+          <div className="flex justify-center gap-2 mb-3 h-14 md:h-16">
             {orderedIds.map((id, idx) => (
               <div
                 key={id}
-                className="w-16 h-16 bg-gradient-to-br from-[#1b4cfc] to-[#0c268f] text-white rounded-2xl flex justify-center items-center font-black text-2xl shadow-md animate-in zoom-in"
+                className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-[#1b4cfc] to-[#0c268f] text-white rounded-xl md:rounded-2xl flex justify-center items-center font-black text-xl md:text-2xl shadow-md animate-in zoom-in"
               >
                 {idx + 1}
               </div>
@@ -291,11 +221,11 @@ export const PlayerView = ({
             }).map((_, idx) => (
               <div
                 key={`empty-${idx}`}
-                className="w-16 h-16 border-4 border-dashed border-gray-200 rounded-2xl"
+                className="w-12 h-12 md:w-16 md:h-16 border-4 border-dashed border-border rounded-xl md:rounded-2xl"
               />
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-2.5">
             {currentQuestion.options.map((opt) => {
               const isSelected = orderedIds.includes(opt.id);
               const orderIndex = orderedIds.indexOf(opt.id) + 1;
@@ -304,29 +234,29 @@ export const PlayerView = ({
                   key={opt.id}
                   disabled={interaction.payloadSent}
                   onClick={() => handleOrderClick(opt.id)}
-                  className={`w-full min-h-[90px] rounded-[2rem] shadow-sm hover:shadow-md transition-all duration-200 border-4 cursor-pointer outline-none ${
+                  className={`w-full min-h-[70px] md:min-h-[90px] rounded-[1.5rem] md:rounded-[2rem] shadow-sm hover:shadow-md transition-all duration-200 border-4 cursor-pointer outline-none ${
                     isSelected
-                      ? "border-[#1b4cfc] bg-[#1b4cfc]/5 scale-[0.98]"
-                      : "border-transparent bg-white hover:border-gray-200"
-                  } flex items-center p-4 gap-4`}
+                      ? "border-[#1b4cfc] bg-[#1b4cfc]/5 dark:bg-[#1b4cfc]/15 scale-[0.98]"
+                      : "border-transparent bg-surface hover:border-border"
+                  } flex items-center p-3 md:p-4 gap-3 md:gap-4`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex justify-center items-center font-black text-xl transition-all ${
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex justify-center items-center font-black text-lg md:text-xl transition-all ${
                       isSelected
                         ? "bg-[#1b4cfc] text-white shadow-md"
-                        : "bg-gray-100 text-gray-400"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-text-muted"
                     }`}
                   >
                     {isSelected ? orderIndex : ""}
                   </div>
-                  <span className="text-xl md:text-2xl font-extrabold flex-1 text-left text-gray-800">
+                  <span className="text-lg md:text-xl font-extrabold flex-1 text-left text-text-main">
                     {opt.content}
                   </span>
                   {opt.imageUrl && (
                     <img
                       src={opt.imageUrl}
                       alt=""
-                      className="h-16 w-16 object-cover rounded-xl shadow-sm border border-gray-100"
+                      className="h-12 w-12 md:h-16 md:w-16 object-cover rounded-xl shadow-sm border border-border"
                     />
                   )}
                 </button>
@@ -337,9 +267,9 @@ export const PlayerView = ({
             <button
               onClick={() => handleSubmit(orderedIds)}
               disabled={interaction.payloadSent}
-              className="mt-6 bg-gradient-to-r from-[#1b4cfc] to-[#1036c7] text-white py-6 rounded-[2rem] text-2xl font-black active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 animate-in slide-in-from-bottom-6 cursor-pointer"
+              className="mt-4 bg-gradient-to-r from-[#1b4cfc] to-[#1036c7] text-white py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] text-xl md:text-2xl font-black active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2.5 animate-in slide-in-from-bottom-6 cursor-pointer"
             >
-              <CheckCircle2 size={32} /> Confirmar Orden
+              <CheckCircle2 size={28} /> Confirmar Orden
             </button>
           )}
         </div>
@@ -348,7 +278,7 @@ export const PlayerView = ({
 
     if (currentQuestion.type === "image_choice") {
       return (
-        <div className="grid grid-cols-2 gap-4 flex-1 mt-6 px-2 animate-in fade-in duration-300">
+        <div className="grid grid-cols-2 gap-3 flex-1 mt-4 px-1 animate-in fade-in duration-300">
           {currentQuestion.options.map((opt, i) => {
             const isSelected = opt.id === selectedOptionId;
             const hasSent = interaction.payloadSent;
@@ -369,26 +299,26 @@ export const PlayerView = ({
                 key={opt.id}
                 disabled={hasSent}
                 onClick={() => handleSubmit(opt.id)}
-                className={`w-full aspect-square flex flex-col items-center justify-center rounded-[2rem] shadow-lg transition-all duration-200 border-4 border-transparent overflow-hidden relative ${
+                className={`w-full aspect-square flex flex-col items-center justify-center rounded-[1.5rem] md:rounded-[2rem] shadow-lg transition-all duration-200 border-4 border-transparent overflow-hidden relative ${
                   optionColors[i % 4]
                 } ${statusClasses}`}
               >
                 {opt.imageUrl ? (
                   <img src={opt.imageUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-white text-2xl font-black px-4">Sin Imagen</span>
+                  <span className="text-white text-xl font-black px-3">Sin Imagen</span>
                 )}
                 
                 {/* Figura Geométrica en Círculo */}
-                <div className="absolute top-3.5 left-3.5 w-11 h-11 rounded-full bg-black/40 backdrop-blur-[2px] flex items-center justify-center text-white font-black text-xl border border-white/20 shadow-md">
+                <div className="absolute top-2.5 left-2.5 w-9 h-9 rounded-full bg-black/40 backdrop-blur-[2px] flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-md">
                   {optionShapes[i % 4]}
                 </div>
 
                 {/* Indicador de Respuesta Registrada sobre la opción */}
                 {hasSent && isSelected && (
                   <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2 animate-in zoom-in-90 duration-300">
-                    <Sparkles className="w-12 h-12 text-yellow-300 drop-shadow animate-pulse" />
-                    <span className="text-white font-black text-sm bg-[#1b4cfc]/90 px-4 py-1.5 rounded-full border border-white/10 uppercase tracking-wider">¡Listo!</span>
+                    <Sparkles className="w-10 h-10 text-yellow-300 drop-shadow animate-pulse" />
+                    <span className="text-white font-black text-xs bg-[#1b4cfc]/90 px-3.5 py-1 rounded-full border border-white/10 uppercase tracking-wider">¡Listo!</span>
                   </div>
                 )}
               </button>
@@ -400,7 +330,7 @@ export const PlayerView = ({
 
     // Default multiple_choice
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 mt-6 animate-in fade-in duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 flex-1 mt-4 animate-in fade-in duration-300">
         {currentQuestion.options.map((opt, i) => {
           const isSelected = opt.id === selectedOptionId;
           const hasSent = interaction.payloadSent;
@@ -421,13 +351,13 @@ export const PlayerView = ({
               key={opt.id}
               disabled={hasSent}
               onClick={() => handleSubmit(opt.id)}
-              className={`w-full min-h-[100px] md:min-h-[150px] flex items-center justify-between rounded-[2rem] shadow-xl text-white text-xl md:text-3xl font-black transition-all p-6 gap-4 relative overflow-hidden ${
+              className={`w-full min-h-[80px] md:min-h-[120px] lg:min-h-[140px] flex items-center justify-between rounded-[1.5rem] md:rounded-[2rem] shadow-xl text-white text-lg md:text-2xl lg:text-3xl font-black transition-all p-4 md:p-6 gap-3 md:gap-4 relative overflow-hidden ${
                 optionColors[i % 4]
               } ${statusClasses}`}
             >
-              <div className="flex items-center gap-4 flex-1">
+              <div className="flex items-center gap-3.5 flex-1">
                 {/* Círculo de Figura Geométrica Kahoot */}
-                <span className="w-12 h-12 md:w-16 md:h-16 shrink-0 flex items-center justify-center rounded-full bg-white/20 text-white font-black text-2xl md:text-3xl border border-white/30 shadow-inner">
+                <span className="w-10 h-10 md:w-14 md:h-14 shrink-0 flex items-center justify-center rounded-full bg-white/20 text-white font-black text-xl md:text-2.5xl border border-white/30 shadow-inner">
                   {optionShapes[i % 4]}
                 </span>
                 
@@ -436,10 +366,10 @@ export const PlayerView = ({
                     <img
                       src={opt.imageUrl}
                       alt=""
-                      className="h-20 md:h-24 max-w-[85%] object-cover mb-2 rounded-xl shadow-md border-2 border-white/20"
+                      className="h-16 md:h-20 max-w-[85%] object-cover mb-2 rounded-xl shadow-md border-2 border-white/20"
                     />
                   )}
-                  <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] leading-tight">
+                  <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] leading-tight text-lg md:text-xl lg:text-2xl">
                     {opt.content}
                   </span>
                 </div>
@@ -447,9 +377,9 @@ export const PlayerView = ({
 
               {/* Indicador sobre la opción seleccionada */}
               {hasSent && isSelected && (
-                <div className="flex flex-col items-center gap-1 shrink-0 bg-[#1b4cfc]/90 border-2 border-white/30 rounded-2xl p-3 shadow-lg scale-105 animate-in zoom-in duration-300">
-                  <CheckCircle2 className="w-7 h-7 text-white animate-bounce" />
-                  <span className="text-xs text-white uppercase tracking-wider font-black">¡Listo!</span>
+                <div className="flex flex-col items-center gap-0.5 shrink-0 bg-[#1b4cfc]/90 border-2 border-white/30 rounded-xl p-2 shadow-lg scale-105 animate-in zoom-in duration-300">
+                  <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
+                  <span className="text-[10px] text-white uppercase tracking-wider font-black">¡Listo!</span>
                 </div>
               )}
             </button>
@@ -472,25 +402,62 @@ export const PlayerView = ({
   return (
     <div className="flex flex-col w-full min-h-[75vh] max-w-4xl mx-auto gap-4 animate-in fade-in pb-8">
       {/* Header de Estado */}
-      <div className="flex justify-between items-center bg-white p-5 rounded-[2rem] shadow-md border border-gray-100 mt-4">
-        <div className="font-black text-3xl flex items-center gap-3 text-[#1b4cfc]">
-          <Trophy className="w-8 h-8 text-yellow-400 fill-yellow-400" /> {playerScore}
+      <div className="flex justify-between items-center bg-surface p-4 md:p-5 rounded-[1.5rem] md:rounded-[2rem] shadow-md border border-border mt-4">
+        <div className="font-black text-2xl md:text-3xl flex items-center gap-3 text-primary">
+          <Trophy className="w-7 h-7 md:w-8 md:h-8 text-yellow-400 fill-yellow-400" /> {playerScore}
         </div>
-        <div className="font-black text-lg bg-[#1b4cfc]/10 text-[#1b4cfc] px-6 py-2.5 rounded-full border border-[#1b4cfc]/10">
-          {interaction.payloadSent ? "Esperando..." : "¡Tu Turno!"}
+        <div className="font-black text-md bg-primary/10 text-primary px-5 py-2 rounded-full border border-primary/10">
+          {status === "revealed" ? "¡Resultados!" : (interaction.payloadSent ? "Esperando..." : "¡Tu Turno!")}
         </div>
       </div>
 
+      {/* Banner de Feedback en Revelación (Instantáneo y Compacto) */}
+      {status === "revealed" && (
+        <div className="w-full animate-in zoom-in-95 duration-300">
+          {playerLastResult === null ? (
+            <div className="flex flex-col items-center justify-center bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 px-6 rounded-[1.5rem] md:rounded-[2rem] shadow-lg text-center">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-7 h-7 text-white animate-bounce" />
+                <h2 className="text-xl md:text-2xl font-black">¡Tiempo Agotado!</h2>
+              </div>
+              <p className="text-xs md:text-sm font-bold text-white/90 mt-1">No respondiste esta pregunta a tiempo. ¡Acelera en la próxima! ⚡</p>
+            </div>
+          ) : playerLastResult.isCorrect ? (
+            <div className="flex flex-col items-center justify-center bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 text-white py-4 px-6 rounded-[1.5rem] md:rounded-[2rem] shadow-lg text-center relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+              <div className="flex items-center gap-2.5">
+                <div className="relative">
+                  <CheckCircle2 className="w-7 h-7 text-white animate-pulse" />
+                  <Sparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-300 animate-spin" />
+                </div>
+                <h2 className="text-xl md:text-2xl font-black">¡Correcto!</h2>
+                <span className="bg-white/20 px-3 py-1 rounded-full text-yellow-300 font-black text-md md:text-lg border border-white/30 ml-2 animate-pulse">
+                  +{playerLastResult.pointsScored} <span className="text-xs text-white font-bold">pts</span>
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center bg-gradient-to-r from-red-600 via-rose-500 to-red-600 text-white py-4 px-6 rounded-[1.5rem] md:rounded-[2rem] shadow-lg text-center">
+              <div className="flex items-center gap-2.5">
+                <XCircle className="w-7 h-7 text-white animate-pulse" />
+                <h2 className="text-xl md:text-2xl font-black">¡Incorrecto!</h2>
+              </div>
+              <p className="text-xs md:text-sm font-bold text-white/90 mt-1">¡Oh no! No te rindas, mantén la concentración. 🧠</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Temporizador */}
-      {currentQuestion && !interaction.payloadSent && (
-        <div className="flex items-center gap-4 mt-2 px-2">
-          <div className="w-full h-5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-200/50">
+      {currentQuestion && !interaction.payloadSent && status === "playing" && (
+        <div className="flex items-center gap-4 mt-1 px-2">
+          <div className="w-full h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-200/50 dark:border-gray-700/50">
             <div
               className={`h-full rounded-full ${getTimerColorClass()}`}
               style={{ width: `${timeLeft}%` }}
             />
           </div>
-          <span className="font-black text-xl text-[#1b4cfc] tabular-nums shrink-0 w-12 text-right">
+          <span className="font-black text-lg text-primary tabular-nums shrink-0 w-12 text-right">
             {Math.ceil((timeLeft * currentQuestion.timeLimit) / 100)}s
           </span>
         </div>
@@ -498,10 +465,10 @@ export const PlayerView = ({
 
       {/* Pregunta */}
       {currentQuestion && (
-        <div className={`text-center font-black text-2xl md:text-3xl text-gray-800 my-2 px-6 shadow-md bg-white rounded-[2rem] py-6 border transition-all duration-300 leading-snug ${
-          timeLeft < 25 && !interaction.payloadSent
+        <div className={`text-center font-black text-xl md:text-2xl text-text-main my-2 px-5 shadow-md bg-surface rounded-[1.5rem] md:rounded-[2rem] py-4 md:py-6 border transition-all duration-300 leading-snug ${
+          timeLeft < 25 && !interaction.payloadSent && status === "playing"
             ? "border-red-500 shadow-red-500/20 ring-4 ring-red-500/10 animate-pulse"
-            : "border-gray-100"
+            : "border-border"
         }`}>
           {currentQuestion.text}
         </div>
@@ -509,64 +476,81 @@ export const PlayerView = ({
 
       {/* Banner premium de espera si ya contestó y el juego sigue activo */}
       {interaction.payloadSent && status === "playing" && (
-        <div className="flex items-center justify-center gap-3.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-2 border-dashed border-emerald-500/35 py-5 px-6 rounded-[2rem] text-emerald-600 dark:text-emerald-400 font-black text-xl md:text-2xl my-2 animate-pulse shadow-sm">
-          <Sparkles className="w-6 h-6 text-emerald-500 dark:text-emerald-400 animate-spin duration-[4000ms]" />
+        <div className="flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-dashed border-emerald-500/30 py-4 px-5 rounded-[1.5rem] md:rounded-[2rem] text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl my-2 animate-pulse shadow-sm">
+          <Sparkles className="w-5 h-5 text-emerald-500 dark:text-emerald-400 animate-spin duration-[4000ms]" />
           <span>✨ ¡Respuesta registrada! Esperando a que todos contesten...</span>
         </div>
       )}
 
       {/* Área Principal (Respuestas o Revelación) */}
-      {status === "revealed" && !showResultScreen ? (
-        <div
-          className={`grid grid-cols-1 ${
-            currentQuestion?.type === "ordering" ||
-            currentQuestion?.type === "short_answer"
-              ? "md:grid-cols-1"
-              : "md:grid-cols-2"
-          } gap-4 md:gap-6 px-2 mt-4`}
-        >
-          {displayedOptions.map((opt, i) => {
-            const isCorrect = correctOptions.includes(opt.id);
-            const opacity = isCorrect ? "opacity-100 scale-100" : "opacity-35 scale-[0.98]";
+      {status === "revealed" ? (
+        <div className="flex flex-col gap-4 mt-2 w-full">
+          <div
+            className={`grid grid-cols-1 ${
+              currentQuestion?.type === "ordering" ||
+              currentQuestion?.type === "short_answer"
+                ? "grid-cols-1"
+                : "grid-cols-1 md:grid-cols-2"
+            } gap-3 md:gap-4 px-1`}
+          >
+            {displayedOptions.map((opt, i) => {
+              const isCorrect = correctOptions.includes(opt.id);
+              const opacity = isCorrect ? "opacity-100 scale-100 ring-2 ring-emerald-500 dark:ring-emerald-400" : "opacity-35 scale-[0.98]";
 
-            return (
-              <div
-                key={opt.id}
-                className={`flex ${
-                  currentQuestion?.type === "ordering" ? "flex-row" : "flex-col justify-center text-center"
-                } items-center min-h-[100px] md:min-h-[120px] rounded-[2rem] ${
-                  optionColors[i % 4]
-                } ${opacity} transition-all duration-300 shadow-xl p-6 gap-4 border-2 ${
-                  isCorrect ? "border-white" : "border-transparent"
-                }`}
-              >
-                {currentQuestion?.type === "ordering" && (
-                  <div className="w-12 h-12 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-2xl shadow-inner border border-white/30">
-                    {opt.position || i + 1}
-                  </div>
-                )}
-                {opt.imageUrl && (
-                  <img
-                    src={opt.imageUrl}
-                    alt=""
-                    className="h-16 w-16 md:h-24 md:w-24 object-cover rounded-2xl shadow-lg border-2 border-white/20"
-                  />
-                )}
-                <span
-                  className={`text-white font-black drop-shadow-sm ${
-                    currentQuestion?.type === "ordering"
-                      ? "text-xl md:text-2xl text-left flex-1"
-                      : "text-2xl md:text-3xl mx-auto"
+              return (
+                <div
+                  key={opt.id}
+                  className={`flex ${
+                    currentQuestion?.type === "ordering" ? "flex-row" : "flex-col justify-center text-center"
+                  } items-center min-h-[80px] md:min-h-[100px] rounded-[1.5rem] md:rounded-[2rem] ${
+                    optionColors[i % 4]
+                  } ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-3 md:gap-4 border-2 ${
+                    isCorrect ? "border-white" : "border-transparent"
                   }`}
                 >
-                  {opt.content}
-                </span>
-                {isCorrect && (
-                  <CheckCircle2 className="text-white w-8 h-8 md:w-10 md:h-10 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
-                )}
-              </div>
-            );
-          })}
+                  {currentQuestion?.type === "ordering" && (
+                    <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-xl md:text-2xl shadow-inner border border-white/30">
+                      {opt.position || i + 1}
+                    </div>
+                  )}
+                  {opt.imageUrl && (
+                    <img
+                      src={opt.imageUrl}
+                      alt=""
+                      className="h-14 w-14 md:h-18 md:w-18 object-cover rounded-xl shadow-lg border-2 border-white/20 shrink-0"
+                    />
+                  )}
+                  <span
+                    className={`text-white font-black drop-shadow-sm ${
+                      currentQuestion?.type === "ordering"
+                        ? "text-lg md:text-xl text-left flex-1"
+                        : "text-xl md:text-2xl mx-auto"
+                    }`}
+                  >
+                    {opt.content}
+                  </span>
+                  {isCorrect && (
+                    <CheckCircle2 className="text-white w-6 h-6 md:w-8 md:h-8 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {currentQuestion?.type === "short_answer" && (
+            <div className="mt-2 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 rounded-[1.5rem] p-4 text-center w-full max-w-md mx-auto shadow-inner backdrop-blur-sm">
+              <p className="text-xs font-bold uppercase tracking-wider mb-1 text-emerald-600 dark:text-emerald-400">Respuesta correcta</p>
+              <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300">{currentQuestion.options[0]?.content || "No disponible"}</p>
+            </div>
+          )}
+
+          {/* Indicador de puntuación total acumulada al final */}
+          <div className="flex items-center gap-2.5 text-lg font-black bg-surface border border-border px-6 py-3 rounded-full mt-4 shadow-md w-fit mx-auto cursor-default">
+            <Trophy className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+            <span className="text-text-main">
+              Puntuación Total: <span className="text-primary font-black">{playerScore}</span>
+            </span>
+          </div>
         </div>
       ) : (
         renderQuestionType()

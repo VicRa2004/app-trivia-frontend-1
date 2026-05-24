@@ -385,13 +385,13 @@ export const HostView = ({
       {/* Temporizador del Host */}
       {status === "playing" && currentQuestion && (
         <div className="flex items-center gap-4 mx-2 md:mx-4 mb-6">
-          <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-200/50">
+          <div className="flex-1 h-5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner border border-gray-200/50 dark:border-gray-700/50">
             <div
               className={`h-full rounded-full ${getTimerColorClass()}`}
               style={{ width: `${timeLeft}%` }}
             />
           </div>
-          <span className="font-black text-xl text-[#1b4cfc] tabular-nums shrink-0 w-12 text-right">
+          <span className="font-black text-xl text-primary tabular-nums shrink-0 w-12 text-right">
             {Math.ceil((timeLeft * currentQuestion.timeLimit) / 100)}s
           </span>
         </div>
