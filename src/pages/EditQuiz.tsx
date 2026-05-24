@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Button } from '../components/Button';
-import { Loader2, Plus, GripVertical, CheckCircle2, Image as ImageIcon, Edit2, X, Save, Trash2 } from 'lucide-react';
+import { Loader2, Plus, GripVertical, CheckCircle2, Image as ImageIcon, Edit2, X, Save, Trash2, Users, Lock } from 'lucide-react';
 import { useQuizByIdQuery, useCreateQuestionMutation, useUpdateQuizMutation, useUpdateQuestionMutation, useDeleteQuestionMutation, useCategoriesQuery } from '../features/quizzes/hooks/useQuizzesHooks';
 import type { QuizQuestion } from '../features/quizzes/types';
 
@@ -69,13 +69,17 @@ const EditQuiz = () => {
   const [isEditingQuiz, setIsEditingQuiz] = useState(false);
   const [quizBanner, setQuizBanner] = useState('');
   const [quizCategory, setQuizCategory] = useState('');
+  const [quizIsPublic, setQuizIsPublic] = useState<boolean | null>(null);
 
-  // Sincronizar quizBanner y quizCategory iniciales desde quiz
+  // Sincronizar quizBanner, quizCategory y quizIsPublic iniciales desde quiz
   if (quiz && quizBanner === '' && quiz.thumbnailUrl) {
      setQuizBanner(quiz.thumbnailUrl);
   }
   if (quiz && quizCategory === '' && quiz.categoryId) {
      setQuizCategory(quiz.categoryId);
+  }
+  if (quiz && quizIsPublic === null) {
+     setQuizIsPublic(quiz.isPublic);
   }
 
   const handleQuestionTypeChange = (newType: string) => {
@@ -204,7 +208,8 @@ const EditQuiz = () => {
       quizId: id,
       data: { 
         thumbnailUrl: quizBanner || undefined,
-        categoryId: quizCategory || undefined
+        categoryId: quizCategory || undefined,
+        isPublic: quizIsPublic ?? true
       }
     }, {
       onSuccess: () => {
@@ -264,14 +269,17 @@ const EditQuiz = () => {
                       Sin Banner
                    </div>
                  )}
-                  <Button 
-                    size="sm" 
-                    variant="secondary" 
-                    onClick={() => setIsEditingQuiz(!isEditingQuiz)} 
-                    className="absolute top-2 right-2 bg-white/80 hover:bg-white text-xs shadow-sm"
-                  >
-                    <Edit2 size={14} className="mr-1" /> Editar Info
-                  </Button>
+                  {!isEditingQuiz && (
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      icon={Edit2}
+                      onClick={() => setIsEditingQuiz(true)} 
+                      className="absolute top-2 right-2 bg-white/80 hover:bg-white text-xs shadow-sm"
+                    >
+                      Editar Info
+                    </Button>
+                  )}
               </div>
               
               {isEditingQuiz && (
@@ -299,9 +307,45 @@ const EditQuiz = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveQuizInfo} isLoading={isUpdatingQuiz} className="px-3">
-                      <Save size={14} className="mr-1" /> Guardar Info
+                  <div>
+                    <label className="text-xs font-bold text-text-main mb-1 block">Privacidad</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuizIsPublic(true)}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border text-xs font-extrabold cursor-pointer transition-all ${
+                          quizIsPublic === true
+                            ? 'border-primary bg-primary/5 text-primary shadow-xs'
+                            : 'border-border bg-surface text-text-muted hover:border-primary/20 hover:text-text-main'
+                        }`}
+                      >
+                        <Users size={14} /> Público
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQuizIsPublic(false)}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl border text-xs font-extrabold cursor-pointer transition-all ${
+                          quizIsPublic === false
+                            ? 'border-primary bg-primary/5 text-primary shadow-xs'
+                            : 'border-border bg-surface text-text-muted hover:border-primary/20 hover:text-text-main'
+                        }`}
+                      >
+                        <Lock size={14} /> Privado
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      icon={X} 
+                      onClick={() => setIsEditingQuiz(false)} 
+                      className="px-3 border-border hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button size="sm" icon={Save} onClick={handleSaveQuizInfo} isLoading={isUpdatingQuiz} className="px-3">
+                      Guardar Info
                     </Button>
                   </div>
                 </div>

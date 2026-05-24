@@ -3,7 +3,7 @@ import { Layout } from '../components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { FileText, Save, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { FileText, Save, Image as ImageIcon, Loader2, Users, Lock } from 'lucide-react';
 import { useCreateQuizMutation, useCategoriesQuery } from '../features/quizzes/hooks/useQuizzesHooks';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ const CreateQuiz = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [categoryId, setCategoryId] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
   const { data: categoriesData } = useCategoriesQuery();
   const categories = categoriesData?.data || [];
   const { mutate: createQuiz, isPending } = useCreateQuizMutation();
@@ -25,7 +26,7 @@ const CreateQuiz = () => {
       description, 
       thumbnailUrl: thumbnailUrl || undefined, 
       categoryId: categoryId || undefined, 
-      isPublic: true 
+      isPublic 
     });
   };
 
@@ -78,6 +79,39 @@ const CreateQuiz = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-bold text-text-main">Privacidad del Quiz</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(true)}
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all text-center cursor-pointer ${
+                      isPublic
+                        ? 'border-primary bg-primary/5 text-primary shadow-md scale-[1.01]'
+                        : 'border-border bg-surface text-text-muted hover:border-primary/20 hover:text-text-main hover:bg-gray-50/50'
+                    }`}
+                  >
+                    <Users size={24} className={isPublic ? 'text-primary' : 'text-text-muted'} />
+                    <span className="text-sm font-extrabold mt-1.5">Público</span>
+                    <span className="text-xs text-text-muted mt-1 leading-normal">Cualquiera puede jugar y competir</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(false)}
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all text-center cursor-pointer ${
+                      !isPublic
+                        ? 'border-primary bg-primary/5 text-primary shadow-md scale-[1.01]'
+                        : 'border-border bg-surface text-text-muted hover:border-primary/20 hover:text-text-main hover:bg-gray-50/50'
+                    }`}
+                  >
+                    <Lock size={24} className={!isPublic ? 'text-primary' : 'text-text-muted'} />
+                    <span className="text-sm font-extrabold mt-1.5">Privado</span>
+                    <span className="text-xs text-text-muted mt-1 leading-normal">Solo tú y quienes tengan el PIN de juego</span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">
