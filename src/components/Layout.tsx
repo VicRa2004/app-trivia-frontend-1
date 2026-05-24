@@ -5,6 +5,7 @@ import { useGameStore } from "../features/game/store/useGameStore";
 import { Button } from "./Button";
 import { LogOut, User, Sun, Moon, History } from "lucide-react";
 import { API_URL } from "../config/env";
+import { AiChatWidget } from "./AiChatWidget";
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuthStore();
@@ -36,7 +37,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           >
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-primary/30 group-hover:shadow-lg group-hover:shadow-primary/40 transition-shadow duration-300">
               T
-            </div>
+              </div>
             <span className="font-extrabold tracking-tight text-xl text-text-main hidden sm:inline-block">
               TriviaApp
             </span>
@@ -121,6 +122,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </footer>
+      
+      <AiChatWidget />
     </div>
   );
 };
