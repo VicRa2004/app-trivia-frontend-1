@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Layout } from "../components/Layout";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
@@ -11,6 +11,8 @@ import {
   Lock,
   Trash2,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   useQuizzesQuery,
@@ -25,16 +27,38 @@ import { AiGenerateQuizModal } from "../components/AiGenerateQuizModal";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  
+  // Paginación
+  const [myPage, setMyPage] = useState(1);
+  const [publicPage, setPublicPage] = useState(1);
+
+  const myQuizzesRef = useRef<HTMLDivElement>(null);
+  const publicQuizzesRef = useRef<HTMLDivElement>(null);
+
+  const handleMyPageChange = (page: number) => {
+    setMyPage(page);
+    setTimeout(() => {
+      myQuizzesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
+  const handlePublicPageChange = (page: number) => {
+    setPublicPage(page);
+    setTimeout(() => {
+      publicQuizzesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
   const {
     data: myData,
     isLoading: isMyLoading,
     isError: isMyError,
-  } = useMyQuizzesQuery(1, 10);
+  } = useMyQuizzesQuery(myPage, 6);
   const {
     data: publicData,
     isLoading: isPublicLoading,
     isError: isPublicError,
-  } = useQuizzesQuery(1, 10);
+  } = useQuizzesQuery(publicPage, 6);
   const { mutate: createGame, isPending } = useCreateGameSessionMutation();
   const deleteMutation = useDeleteQuizMutation();
   const resetGame = useGameStore((state) => state.resetGame);
@@ -61,7 +85,12 @@ const Dashboard = () => {
   };
 
   const myQuizzes = myData?.data || [];
+  const myMeta = myData?.meta;
+  const myTotalPages = myMeta ? myMeta.lastPage : 0;
+
   const publicQuizzes = publicData?.data || [];
+  const publicMeta = publicData?.meta;
+  const publicTotalPages = publicMeta ? publicMeta.lastPage : 0;
 
   const renderQuizCard = (q: Quiz, isMine: boolean) => (
     <Card
@@ -189,7 +218,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Sección: Mis Quizzes */}
-        <section>
+        <section ref={myQuizzesRef}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl font-extrabold text-text-main tracking-tight">
@@ -251,14 +280,60 @@ const Dashboard = () => {
               </Button>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myQuizzes.map((q: Quiz) => renderQuizCard(q, true))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myQuizzes.map((q: Quiz) => renderQuizCard(q, true))}
+              </div>
+              
+              {/* Controles de Paginación Mis Quizzes */}
+              {myTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8 animate-in fade-in duration-200">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    icon={ChevronLeft}
+                    onClick={() => handleMyPageChange(Math.max(1, myPage - 1))}
+                    disabled={myPage === 1}
+                    className="px-3 border-border hover:bg-primary-light hover:text-primary active:scale-95 transition-all duration-200"
+                  >
+                    Anterior
+                  </Button>
+                  
+                  <div className="flex items-center gap-1.5 mx-2">
+                    {Array.from({ length: myTotalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handleMyPageChange(page)}
+                        className={`w-9 h-9 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                          myPage === page
+                            ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                            : 'border border-border bg-surface text-text-muted hover:border-primary/30 hover:text-text-main'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleMyPageChange(Math.min(myTotalPages, myPage + 1))}
+                    disabled={myPage === myTotalPages}
+                    className="px-3 border-border hover:bg-primary-light hover:text-primary active:scale-95 transition-all duration-200"
+                  >
+                    <span className="flex items-center gap-1">
+                      Siguiente <ChevronRight size={14} className="ml-1" />
+                    </span>
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
         {/* Sección: Quizzes Públicos */}
-        <section>
+        <section ref={publicQuizzesRef}>
           <div className="flex flex-col mb-6">
             <h2 className="text-3xl font-extrabold text-text-main tracking-tight">
               Quizzes Públicos
@@ -291,9 +366,55 @@ const Dashboard = () => {
               </p>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {publicQuizzes.map((q: Quiz) => renderQuizCard(q, false))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {publicQuizzes.map((q: Quiz) => renderQuizCard(q, false))}
+              </div>
+
+              {/* Controles de Paginación Quizzes Públicos */}
+              {publicTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8 animate-in fade-in duration-200">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    icon={ChevronLeft}
+                    onClick={() => handlePublicPageChange(Math.max(1, publicPage - 1))}
+                    disabled={publicPage === 1}
+                    className="px-3 border-border hover:bg-primary-light hover:text-primary active:scale-95 transition-all duration-200"
+                  >
+                    Anterior
+                  </Button>
+                  
+                  <div className="flex items-center gap-1.5 mx-2">
+                    {Array.from({ length: publicTotalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePublicPageChange(page)}
+                        className={`w-9 h-9 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                          publicPage === page
+                            ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                            : 'border border-border bg-surface text-text-muted hover:border-primary/30 hover:text-text-main'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handlePublicPageChange(Math.min(publicTotalPages, publicPage + 1))}
+                    disabled={publicPage === publicTotalPages}
+                    className="px-3 border-border hover:bg-primary-light hover:text-primary active:scale-95 transition-all duration-200"
+                  >
+                    <span className="flex items-center gap-1">
+                      Siguiente <ChevronRight size={14} className="ml-1" />
+                    </span>
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>

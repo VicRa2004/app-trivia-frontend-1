@@ -12,7 +12,9 @@ import {
   Users, 
   Play, 
   Award,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,6 +22,22 @@ const History = () => {
   const navigate = useNavigate();
   const { data: historyData, isLoading, isError } = useGameHistoryQuery();
   const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>({});
+
+  // Paginación del lado del cliente
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const historyList = historyData || [];
+  const totalPages = Math.ceil(historyList.length / itemsPerPage);
+  
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentSessions = historyList.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setExpandedSessions({}); // Cerrar expansores al cambiar de página
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const toggleSession = (sessionId: string) => {
     setExpandedSessions((prev) => ({
@@ -95,7 +113,7 @@ const History = () => {
           </Card>
         ) : (
           <div className="flex flex-col gap-6">
-            {historyData.map((session) => {
+            {currentSessions.map((session) => {
               const isExpanded = !!expandedSessions[session.id];
               const playerCount = session.attempts?.length || 0;
               const topAttempts = session.attempts || [];
@@ -211,6 +229,50 @@ const History = () => {
                 </Card>
               );
             })}
+
+            {/* Controles de Paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8 animate-in fade-in duration-200">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  icon={ChevronLeft}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 border-border hover:bg-primary-light hover:text-primary active:scale-95 transition-all duration-200"
+                >
+                  Anterior
+                </Button>
+                
+                <div className="flex items-center gap-1.5 mx-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-9 h-9 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                        currentPage === page
+                          ? 'bg-primary text-white shadow-md shadow-primary/20 scale-105'
+                          : 'border border-border bg-surface text-text-muted hover:border-primary/30 hover:text-text-main'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 border-border hover:bg-primary-light hover:text-primary active:scale-95 transition-all duration-200"
+                >
+                  <span className="flex items-center gap-1">
+                    Siguiente <ChevronRight size={14} className="ml-1" />
+                  </span>
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
