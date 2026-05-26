@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../store/useGameStore";
+import type { GameOption } from "../store/useGameStore";
 import { Trophy, CheckCircle2, AlertTriangle, Send, XCircle, Sparkles } from "lucide-react";
 import { Card } from "../../../components/Card";
 import { useGameAudio } from "../hooks/useGameAudio";
@@ -25,11 +26,11 @@ export const PlayerView = ({
     qId?: string | null;
     payloadSent: boolean;
     startedAt: number;
-  }>({
+  }>(() => ({
     qId: currentQuestion?.id,
     payloadSent: false,
     startedAt: Date.now(),
-  });
+  }));
 
   const lastSecondRef = useRef<number>(-1);
 
@@ -55,12 +56,14 @@ export const PlayerView = ({
   const [timeLeft, setTimeLeft] = useState(100);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
 
-  // Sincronizar con la pregunta actual
-  if (currentQuestion?.id !== interaction.qId) {
+  // Sincronizar con la pregunta actual en la fase de render para evitar cascadas
+  if (currentQuestion && currentQuestion.id !== interaction.qId) {
+    // eslint-disable-next-line react-hooks/purity
+    const now = Date.now();
     setInteraction({
-      qId: currentQuestion?.id,
+      qId: currentQuestion.id,
       payloadSent: false,
-      startedAt: Date.now(),
+      startedAt: now,
     });
     setTextAnswer("");
     setOrderedIds([]);
@@ -118,7 +121,7 @@ export const PlayerView = ({
     };
   }, [status, currentQuestion, interaction.payloadSent, interaction.startedAt]);
 
-  const handleSubmit = (payload: string | string[]) => {
+  const handleSubmit = useCallback((payload: string | string[]) => {
     if (interaction.payloadSent || status !== "playing") return;
     if (typeof payload === 'string') {
       setSelectedOptionId(payload);
@@ -126,7 +129,11 @@ export const PlayerView = ({
     setInteraction((prev) => ({ ...prev, payloadSent: true }));
     const nowTs = Date.now();
     onSubmitAnswer(payload, nowTs - interaction.startedAt);
-  };
+  }, [interaction.payloadSent, interaction.startedAt, status, onSubmitAnswer]);
+
+  if (currentQuestion && currentQuestion.id !== interaction.qId) {
+    return null;
+  }
 
   const optionShapes = ["▲", "◆", "●", "■"];
 
@@ -485,57 +492,160 @@ export const PlayerView = ({
       {/* Área Principal (Respuestas o Revelación) */}
       {status === "revealed" ? (
         <div className="flex flex-col gap-4 mt-2 w-full">
-          <div
-            className={`grid grid-cols-1 ${
-              currentQuestion?.type === "ordering" ||
-              currentQuestion?.type === "short_answer"
-                ? "grid-cols-1"
-                : "grid-cols-1 md:grid-cols-2"
-            } gap-3 md:gap-4 px-1`}
-          >
-            {displayedOptions.map((opt, i) => {
-              const isCorrect = correctOptions.includes(opt.id);
-              const opacity = isCorrect ? "opacity-100 scale-100 ring-2 ring-emerald-500 dark:ring-emerald-400" : "opacity-35 scale-[0.98]";
+          {currentQuestion?.type !== "ordering" && currentQuestion?.type !== "short_answer" && (
+            <div
+              className={`grid grid-cols-1 ${
+                currentQuestion?.type === "image_choice"
+                  ? "grid-cols-1 md:grid-cols-2"
+                  : "grid-cols-1 md:grid-cols-2"
+              } gap-3 md:gap-4 px-1`}
+            >
+              {displayedOptions.map((opt, i) => {
+                const isCorrect = correctOptions.includes(opt.id);
+                const opacity = isCorrect ? "opacity-100 scale-100 ring-2 ring-emerald-500 dark:ring-emerald-400" : "opacity-35 scale-[0.98]";
 
-              return (
-                <div
-                  key={opt.id}
-                  className={`flex ${
-                    currentQuestion?.type === "ordering" ? "flex-row" : "flex-col justify-center text-center"
-                  } items-center min-h-[80px] md:min-h-[100px] rounded-[1.5rem] md:rounded-[2rem] ${
-                    optionColors[i % 4]
-                  } ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-3 md:gap-4 border-2 ${
-                    isCorrect ? "border-white" : "border-transparent"
-                  }`}
-                >
-                  {currentQuestion?.type === "ordering" && (
-                    <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-xl md:text-2xl shadow-inner border border-white/30">
-                      {opt.position || i + 1}
-                    </div>
-                  )}
-                  {opt.imageUrl && (
-                    <img
-                      src={opt.imageUrl}
-                      alt=""
-                      className="h-14 w-14 md:h-18 md:w-18 object-cover rounded-xl shadow-lg border-2 border-white/20 shrink-0"
-                    />
-                  )}
-                  <span
-                    className={`text-white font-black drop-shadow-sm ${
-                      currentQuestion?.type === "ordering"
-                        ? "text-lg md:text-xl text-left flex-1"
-                        : "text-xl md:text-2xl mx-auto"
+                return (
+                  <div
+                    key={opt.id}
+                    className={`flex flex-col justify-center text-center items-center min-h-[80px] md:min-h-[100px] rounded-[1.5rem] md:rounded-[2rem] ${
+                      optionColors[i % 4]
+                    } ${opacity} transition-all duration-300 shadow-xl p-4 md:p-6 gap-3 md:gap-4 border-2 ${
+                      isCorrect ? "border-white" : "border-transparent"
                     }`}
                   >
-                    {opt.content}
-                  </span>
-                  {isCorrect && (
-                    <CheckCircle2 className="text-white w-6 h-6 md:w-8 md:h-8 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
+                    {opt.imageUrl && (
+                      <img
+                        src={opt.imageUrl}
+                        alt=""
+                        className="h-14 w-14 md:h-18 md:w-18 object-cover rounded-xl shadow-lg border-2 border-white/20 shrink-0"
+                      />
+                    )}
+                    <span className="text-white font-black drop-shadow-sm text-xl md:text-2xl mx-auto">
+                      {opt.content}
+                    </span>
+                    {isCorrect && (
+                      <CheckCircle2 className="text-white w-6 h-6 md:w-8 md:h-8 ml-auto shrink-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] animate-pulse" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {currentQuestion?.type === "ordering" && (() => {
+            const hasAnswered = orderedIds.length === currentQuestion.options.length;
+            
+            const playerOrderedOptions = hasAnswered
+              ? (orderedIds
+                  .map((id) => currentQuestion.options.find((o) => o.id === id))
+                  .filter(Boolean) as GameOption[])
+              : [];
+
+            const correctOrderedOptions = [...currentQuestion.options].sort(
+              (a, b) => (a.position || 0) - (b.position || 0)
+            );
+
+            return (
+              <div className="flex flex-col gap-6 mt-2 w-full">
+                {/* 1. Sección: Tu Respuesta */}
+                <div className="bg-surface border border-border rounded-[2rem] p-6 shadow-md">
+                  <h3 className="text-xl font-black text-text-main mb-4 flex items-center gap-2">
+                    {hasAnswered ? "👋 Tu orden de respuesta:" : "⏳ No respondiste a tiempo:"}
+                  </h3>
+                  
+                  {hasAnswered ? (
+                    <div className="flex flex-col gap-3">
+                      {playerOrderedOptions.map((opt, i) => {
+                        const correctPos = opt.position || 0;
+                        const playerPos = i + 1;
+                        const isCorrectPosition = correctPos === playerPos;
+                        
+                        return (
+                          <div
+                            key={opt.id}
+                            className={`flex flex-row items-center min-h-[80px] rounded-[1.5rem] border-4 p-4 md:p-5 gap-4 shadow-sm transition-all duration-300 ${
+                              isCorrectPosition
+                                ? "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border-emerald-500 shadow-emerald-500/10"
+                                : "bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/20 dark:to-red-950/20 border-rose-500 shadow-rose-500/10"
+                            }`}
+                          >
+                            {/* Círculo de Posición de Respuesta del Jugador */}
+                            <div
+                              className={`w-11 h-11 shrink-0 rounded-full text-white flex items-center justify-center font-black text-xl shadow-inner border border-white/20 ${
+                                isCorrectPosition ? "bg-emerald-500" : "bg-rose-500"
+                              }`}
+                            >
+                              {playerPos}
+                            </div>
+                            
+                            {opt.imageUrl && (
+                              <img
+                                src={opt.imageUrl}
+                                alt=""
+                                className="h-14 w-14 object-cover rounded-xl shadow-md border shrink-0"
+                              />
+                            )}
+                            
+                            <div className="flex-1 flex flex-col items-start justify-center">
+                              <span className={`font-black text-lg md:text-xl text-left leading-tight ${
+                                isCorrectPosition ? "text-emerald-900 dark:text-emerald-200" : "text-rose-900 dark:text-rose-200"
+                              }`}>
+                                {opt.content}
+                              </span>
+                              {!isCorrectPosition && (
+                                <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400 mt-0.5">
+                                  Posición correcta: {correctPos}
+                                </span>
+                              )}
+                            </div>
+
+                            {isCorrectPosition ? (
+                              <CheckCircle2 className="text-emerald-500 w-8 h-8 shrink-0 animate-pulse" />
+                            ) : (
+                              <XCircle className="text-rose-500 w-8 h-8 shrink-0 animate-pulse" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center text-text-muted font-bold py-6 text-lg">
+                      No se envió ningún orden de respuesta.
+                    </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
+
+                {/* 2. Sección: Orden Correcto */}
+                <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/5 dark:to-teal-950/5 border border-emerald-200/50 dark:border-emerald-800/20 rounded-[2rem] p-6 shadow-sm">
+                  <h3 className="text-xl font-black text-emerald-800 dark:text-emerald-300 mb-4 flex items-center gap-2">
+                    ✨ Orden Correcto:
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {correctOrderedOptions.map((opt) => (
+                      <div
+                        key={opt.id}
+                        className="flex flex-row items-center min-h-[70px] rounded-[1.5rem] bg-surface border border-emerald-100 dark:border-emerald-800/30 p-4 gap-4 shadow-sm"
+                      >
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-lg border border-emerald-500/20">
+                          {opt.position}
+                        </div>
+                        {opt.imageUrl && (
+                          <img
+                            src={opt.imageUrl}
+                            alt=""
+                            className="h-12 w-12 object-cover rounded-xl shadow-md border shrink-0"
+                          />
+                        )}
+                        <span className="font-extrabold text-md md:text-lg text-emerald-800 dark:text-emerald-300 text-left flex-1">
+                          {opt.content}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {currentQuestion?.type === "short_answer" && (
             <div className="mt-2 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 rounded-[1.5rem] p-4 text-center w-full max-w-md mx-auto shadow-inner backdrop-blur-sm">

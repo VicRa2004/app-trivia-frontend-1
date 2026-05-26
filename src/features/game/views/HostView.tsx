@@ -473,7 +473,7 @@ export const HostView = ({
       </div>
 
       {/* Lista de Opciones Estándar */}
-      {!showRanking && currentQuestion && currentQuestion.type !== "image_choice" && (
+      {!showRanking && currentQuestion && currentQuestion.type !== "image_choice" && currentQuestion.type !== "short_answer" && (
         <div
           className={`grid grid-cols-1 ${
             currentQuestion.type === "ordering" || currentQuestion.type === "short_answer"
