@@ -541,9 +541,9 @@ export const PlayerView = ({
                   .filter(Boolean) as GameOption[])
               : [];
 
-            const correctOrderedOptions = [...currentQuestion.options].sort(
-              (a, b) => (a.position || 0) - (b.position || 0)
-            );
+            const correctOrderedOptions = correctOptions
+              .map((id) => currentQuestion.options.find((o) => o.id === id))
+              .filter(Boolean) as GameOption[];
 
             return (
               <div className="flex flex-col gap-6 mt-2 w-full">
@@ -556,7 +556,7 @@ export const PlayerView = ({
                   {hasAnswered ? (
                     <div className="flex flex-col gap-3">
                       {playerOrderedOptions.map((opt, i) => {
-                        const correctPos = opt.position || 0;
+                        const correctPos = correctOptions.indexOf(opt.id) + 1;
                         const playerPos = i + 1;
                         const isCorrectPosition = correctPos === playerPos;
                         
@@ -621,13 +621,13 @@ export const PlayerView = ({
                     ✨ Orden Correcto:
                   </h3>
                   <div className="flex flex-col gap-3">
-                    {correctOrderedOptions.map((opt) => (
+                    {correctOrderedOptions.map((opt, i) => (
                       <div
                         key={opt.id}
                         className="flex flex-row items-center min-h-[70px] rounded-[1.5rem] bg-surface border border-emerald-100 dark:border-emerald-800/30 p-4 gap-4 shadow-sm"
                       >
                         <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-lg border border-emerald-500/20">
-                          {opt.position}
+                          {i + 1}
                         </div>
                         {opt.imageUrl && (
                           <img

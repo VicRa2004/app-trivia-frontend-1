@@ -40,6 +40,8 @@ export const HostView = ({
   const lastSecondRef = useRef<number>(-1);
   const onShowAnswerRef = useRef(onShowAnswer);
   const playTickRef = useRef(playTick);
+  const onNextQuestionRef = useRef(onNextQuestion);
+  const onFinishGameRef = useRef(onFinishGame);
 
   // Mantener actualizado el ref del callback para evitar dependencias circulares en useEffect
   useEffect(() => {
@@ -49,6 +51,14 @@ export const HostView = ({
   useEffect(() => {
     playTickRef.current = playTick;
   }, [playTick]);
+
+  useEffect(() => {
+    onNextQuestionRef.current = onNextQuestion;
+  }, [onNextQuestion]);
+
+  useEffect(() => {
+    onFinishGameRef.current = onFinishGame;
+  }, [onFinishGame]);
 
   // Temporizador ultra fluido usando requestAnimationFrame a 60 FPS
   useEffect(() => {
@@ -102,6 +112,20 @@ export const HostView = ({
       return () => clearTimeout(to);
     }
   }, [status]);
+
+  // Avanzar automáticamente 4 segundos después de mostrarse el marcador
+  useEffect(() => {
+    if (status === "revealed" && showRanking) {
+      const timer = setTimeout(() => {
+        if (questionIndex + 1 < questionTotal) {
+          onNextQuestionRef.current();
+        } else {
+          onFinishGameRef.current();
+        }
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, showRanking, questionIndex, questionTotal]);
 
   // Colores Kahoot-style Premium
   const optionColors = [
@@ -318,7 +342,12 @@ export const HostView = ({
     ? [...currentQuestion.options]
     : [];
   if (status === "revealed" && currentQuestion?.type === "ordering") {
-    displayedOptions.sort((a, b) => (a.position || 0) - (b.position || 0));
+    const correctOptions = useGameStore.getState().correctOptions;
+    displayedOptions.sort((a, b) => {
+      const indexA = correctOptions.indexOf(a.id);
+      const indexB = correctOptions.indexOf(b.id);
+      return indexA - indexB;
+    });
   }
 
   const getTimerColorClass = () => {
@@ -498,7 +527,7 @@ export const HostView = ({
                 {/* Círculo a la izquierda: Posición si es ordenación, Figura Geométrica en otro caso */}
                 <div className="w-14 h-14 lg:w-18 lg:h-18 shrink-0 rounded-full bg-white/20 text-white flex items-center justify-center font-black text-2xl lg:text-3.5xl border border-white/30 shadow-inner">
                   {currentQuestion.type === "ordering" 
-                    ? (isRevealed ? opt.position || i + 1 : "?")
+                    ? (isRevealed ? useGameStore.getState().correctOptions.indexOf(opt.id) + 1 : "?")
                     : optionShapes[i % 4]
                   }
                 </div>
