@@ -185,12 +185,12 @@ const Dashboard = () => {
     <Layout>
       <div className="flex flex-col gap-10 w-full animate-in fade-in duration-300 pb-12">
         {/* Unirse a Juego Rápido */}
-        <Card className="bg-primary text-white border-0 shadow-xl shadow-primary/20 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <Card className="bg-primary-light text-text-main border border-border shadow-xl shadow-primary/5 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left">
             <h2 className="text-2xl md:text-3xl font-extrabold mb-2">
               ¿Tienes un PIN de juego?
             </h2>
-            <p className="text-white/80 font-medium">
+            <p className="text-text-muted font-medium">
               Ingresa el código que te dio el presentador para unirte.
             </p>
           </div>
