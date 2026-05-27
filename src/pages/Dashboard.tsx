@@ -201,7 +201,7 @@ const Dashboard = () => {
             <input
               type="text"
               placeholder="Ej. 123456"
-              className="px-6 py-4 rounded-2xl text-center font-extrabold text-2xl text-primary bg-white outline-none w-full md:w-48 placeholder:text-text-muted/50 focus:ring-4 focus:ring-white/50 transition-all uppercase"
+              className="px-6 py-4 rounded-2xl text-center font-extrabold text-2xl text-text-main bg-surface border border-border outline-none w-full md:w-48 placeholder:text-text-muted/50 focus:ring-4 focus:ring-primary/50 transition-all uppercase"
               value={pinInput}
               onChange={(e) => setPinInput(e.target.value)}
               required
