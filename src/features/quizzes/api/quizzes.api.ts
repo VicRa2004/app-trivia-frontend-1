@@ -1,8 +1,11 @@
 import { api } from '../../../api/axios';
 import type { Quiz, PaginatedResponse, CreateQuizData, QuizQuestion, CreateQuestionData, UpdateQuizData, Category } from '../types';
 
-export const getQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedResponse<Quiz>> => {
-  const response = await api.get<PaginatedResponse<Quiz>>(`/quizzes?page=${page}&limit=${limit}`);
+export const getQuizzesFn = async (page = 1, limit = 10, search?: string, categoryId?: string): Promise<PaginatedResponse<Quiz>> => {
+  let url = `/quizzes?page=${page}&limit=${limit}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (categoryId) url += `&categoryId=${categoryId}`;
+  const response = await api.get<PaginatedResponse<Quiz>>(url);
   return response.data;
 };
 
@@ -26,8 +29,11 @@ export const createQuestionFn = async ({ quizId, data }: { quizId: string, data:
   return response.data;
 };
 
-export const getMyQuizzesFn = async (page = 1, limit = 10): Promise<PaginatedResponse<Quiz>> => {
-  const response = await api.get<PaginatedResponse<Quiz>>(`/quizzes/my-quizzes?page=${page}&limit=${limit}`);
+export const getMyQuizzesFn = async (page = 1, limit = 10, search?: string, categoryId?: string): Promise<PaginatedResponse<Quiz>> => {
+  let url = `/quizzes/my-quizzes?page=${page}&limit=${limit}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (categoryId) url += `&categoryId=${categoryId}`;
+  const response = await api.get<PaginatedResponse<Quiz>>(url);
   return response.data;
 };
 

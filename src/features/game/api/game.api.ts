@@ -5,12 +5,28 @@ export interface CreateGameResponse {
   sessionId: string;
 }
 
+export interface HistoryResponse {
+  id: string;
+  questionId: string;
+  givenAnswer: string | null;
+  isCorrect: boolean | null;
+  responseTimeMs: number | null;
+}
+
 export interface HistoryAttempt {
   id: string;
   totalScore: number;
   user: {
     username: string;
   };
+  responses: HistoryResponse[];
+}
+
+export interface HistoryQuestion {
+  id: string;
+  questionText: string;
+  questionType: string;
+  orderNumber: number;
 }
 
 export interface HistorySession {
@@ -19,6 +35,7 @@ export interface HistorySession {
   quiz: {
     title: string;
     thumbnailUrl?: string;
+    questions: HistoryQuestion[];
   };
   attempts: HistoryAttempt[];
 }

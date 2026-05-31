@@ -2,17 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuizzesFn, getMyQuizzesFn, createQuizFn, getQuizByIdFn, createQuestionFn, updateQuizFn, deleteQuizFn, updateQuestionFn, deleteQuestionFn, getCategoriesFn } from '../api/quizzes.api';
 import { useNavigate } from 'react-router-dom';
 
-export const useQuizzesQuery = (page = 1, limit = 10) => {
+export const useQuizzesQuery = (page = 1, limit = 10, search?: string, categoryId?: string) => {
   return useQuery({
-    queryKey: ['quizzes', { page, limit }],
-    queryFn: () => getQuizzesFn(page, limit),
+    queryKey: ['quizzes', { page, limit, search, categoryId }],
+    queryFn: () => getQuizzesFn(page, limit, search, categoryId),
   });
 };
 
-export const useMyQuizzesQuery = (page = 1, limit = 10) => {
+export const useMyQuizzesQuery = (page = 1, limit = 10, search?: string, categoryId?: string) => {
   return useQuery({
-    queryKey: ['my-quizzes', { page, limit }],
-    queryFn: () => getMyQuizzesFn(page, limit),
+    queryKey: ['my-quizzes', { page, limit, search, categoryId }],
+    queryFn: () => getMyQuizzesFn(page, limit, search, categoryId),
   });
 };
 

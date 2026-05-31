@@ -13,11 +13,13 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import {
   useQuizzesQuery,
   useMyQuizzesQuery,
   useDeleteQuizMutation,
+  useCategoriesQuery,
 } from "../features/quizzes/hooks/useQuizzesHooks";
 import { useNavigate } from "react-router-dom";
 import type { Quiz } from "../features/quizzes/types";
@@ -31,6 +33,12 @@ const Dashboard = () => {
   // Paginación
   const [myPage, setMyPage] = useState(1);
   const [publicPage, setPublicPage] = useState(1);
+
+  // Estados de filtros
+  const [mySearch, setMySearch] = useState("");
+  const [myCategoryId, setMyCategoryId] = useState("");
+  const [publicSearch, setPublicSearch] = useState("");
+  const [publicCategoryId, setPublicCategoryId] = useState("");
 
   const myQuizzesRef = useRef<HTMLDivElement>(null);
   const publicQuizzesRef = useRef<HTMLDivElement>(null);
@@ -49,16 +57,21 @@ const Dashboard = () => {
     }, 50);
   };
 
+  const { data: categoriesData } = useCategoriesQuery();
+  const categories = categoriesData?.data || [];
+
   const {
     data: myData,
     isLoading: isMyLoading,
     isError: isMyError,
-  } = useMyQuizzesQuery(myPage, 6);
+  } = useMyQuizzesQuery(myPage, 6, mySearch, myCategoryId);
+
   const {
     data: publicData,
     isLoading: isPublicLoading,
     isError: isPublicError,
-  } = useQuizzesQuery(publicPage, 6);
+  } = useQuizzesQuery(publicPage, 6, publicSearch, publicCategoryId);
+
   const { mutate: createGame, isPending } = useCreateGameSessionMutation();
   const deleteMutation = useDeleteQuizMutation();
   const resetGame = useGameStore((state) => state.resetGame);
@@ -247,6 +260,38 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Panel de Filtros para Mis Quizzes */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-surface p-4 rounded-2xl border border-border/80 shadow-xs">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Buscar en mis quizzes..."
+                value={mySearch}
+                onChange={(e) => {
+                  setMySearch(e.target.value);
+                  setMyPage(1);
+                }}
+                className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl outline-none focus:border-primary text-sm transition-colors text-text-main placeholder:text-text-muted/60"
+              />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+            </div>
+            <select
+              value={myCategoryId}
+              onChange={(e) => {
+                setMyCategoryId(e.target.value);
+                setMyPage(1);
+              }}
+              className="sm:w-64 w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:border-primary text-sm font-semibold text-text-main"
+            >
+              <option value="">Todas las categorías</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {isMyLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -266,18 +311,21 @@ const Dashboard = () => {
                 <PlusCircle className="w-10 h-10 text-primary" />
               </div>
               <h2 className="text-xl font-bold text-text-main">
-                No tienes Quizzes
+                No se encontraron Quizzes
               </h2>
               <p className="text-text-muted mt-2 mb-6 text-center max-w-sm">
-                Empieza por crear algunas preguntas para tus amigos o
-                estudiantes.
+                {mySearch || myCategoryId 
+                  ? "Prueba cambiando los criterios de búsqueda o categoría." 
+                  : "Empieza por crear algunas preguntas para tus amigos o estudiantes."}
               </p>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/dashboard/create-quiz")}
-              >
-                Comenzar Ahora
-              </Button>
+              {!mySearch && !myCategoryId && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/dashboard/create-quiz")}
+                >
+                  Comenzar Ahora
+                </Button>
+              )}
             </Card>
           ) : (
             <>
@@ -343,6 +391,38 @@ const Dashboard = () => {
             </p>
           </div>
 
+          {/* Panel de Filtros para Quizzes Públicos */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 bg-surface p-4 rounded-2xl border border-border/80 shadow-xs">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Buscar quizzes de la comunidad..."
+                value={publicSearch}
+                onChange={(e) => {
+                  setPublicSearch(e.target.value);
+                  setPublicPage(1);
+                }}
+                className="w-full pl-11 pr-4 py-3 bg-background border border-border rounded-xl outline-none focus:border-primary text-sm transition-colors text-text-main placeholder:text-text-muted/60"
+              />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+            </div>
+            <select
+              value={publicCategoryId}
+              onChange={(e) => {
+                setPublicCategoryId(e.target.value);
+                setPublicPage(1);
+              }}
+              className="sm:w-64 w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:border-primary text-sm font-semibold text-text-main"
+            >
+              <option value="">Todas las categorías</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {isPublicLoading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -359,10 +439,12 @@ const Dashboard = () => {
           ) : publicQuizzes.length === 0 ? (
             <Card className="flex flex-col items-center justify-center p-12 border-dashed border-2 border-border bg-transparent shadow-none">
               <h2 className="text-xl font-bold text-text-main">
-                Aún no hay Quizzes Públicos
+                No se encontraron Quizzes Públicos
               </h2>
               <p className="text-text-muted mt-2 text-center max-w-sm">
-                ¡Sé el primero en crear uno y compartirlo con todos!
+                {publicSearch || publicCategoryId 
+                  ? "Prueba cambiando los criterios de búsqueda o categoría." 
+                  : "¡Sé el primero en crear uno y compartirlo con todos!"}
               </p>
             </Card>
           ) : (

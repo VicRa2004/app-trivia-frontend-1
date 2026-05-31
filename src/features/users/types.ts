@@ -30,4 +30,17 @@ export interface PaginatedResponse<T> {
 export interface UpdateUserData {
   fullName?: string;
   avatarId?: string;
+  username?: string;
+  email?: string;
+  age?: number;
+  preferredLanguage?: string;
+  password?: string;
+  currentPassword?: string;
+}
+
+export interface PlayerStats {
+  totalGames: number;
+  maxScore: number;
+  podiums: number;
+  accuracy: number;
 }

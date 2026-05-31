@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getAvatarsFn, getUserByIdFn, updateUserFn } from '../api/users.api';
+import { getAvatarsFn, getUserByIdFn, updateUserFn, getPlayerStatsFn } from '../api/users.api';
 import { useAuthStore } from '../../auth/store/useAuthStore';
 import type { UpdateUserData } from '../types';
 
@@ -15,6 +15,14 @@ export const useUserQuery = (id: string) => {
   return useQuery({
     queryKey: ['user', id],
     queryFn: () => getUserByIdFn(id),
+    enabled: !!id,
+  });
+};
+
+export const useUserStatsQuery = (id: string) => {
+  return useQuery({
+    queryKey: ['user-stats', id],
+    queryFn: () => getPlayerStatsFn(id),
     enabled: !!id,
   });
 };

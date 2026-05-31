@@ -57,6 +57,8 @@ const EditQuiz = () => {
   const [questionText, setQuestionText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [questionType, setQuestionType] = useState('multiple_choice');
+  const [timeLimit, setTimeLimit] = useState(20);
+  const [points, setPoints] = useState(1000);
   const [options, setOptions] = useState([
     { content: '', imageUrl: '', isCorrect: true, position: 1 },
     { content: '', imageUrl: '', isCorrect: false, position: 2 },
@@ -99,6 +101,8 @@ const EditQuiz = () => {
     setQuestionText('');
     setImageUrl('');
     setQuestionType('multiple_choice');
+    setTimeLimit(20);
+    setPoints(1000);
     setOptions([
        { content: '', imageUrl: '', isCorrect: true, position: 1 },
        { content: '', imageUrl: '', isCorrect: false, position: 2 },
@@ -113,6 +117,8 @@ const EditQuiz = () => {
     setQuestionText(q.questionText || '');
     setImageUrl(q.imageUrl || '');
     setQuestionType(q.questionType || 'multiple_choice');
+    setTimeLimit(q.timeLimit || 20);
+    setPoints(q.points ?? 1000);
     
     // Ensure 4 options exist for the form
     const mappedOptions = [...(q.options || [])];
@@ -137,8 +143,8 @@ const EditQuiz = () => {
       questionText,
       imageUrl: imageUrl || undefined,
       questionType,
-      points: 1000,
-      timeLimit: 20,
+      points,
+      timeLimit,
       orderNumber: editingQuestionId
         ? (quiz.questions?.find(q => q.id === editingQuestionId)?.orderNumber || 1)
         : (quiz.questions?.length || 0) + 1,
@@ -488,6 +494,37 @@ const EditQuiz = () => {
                                   />
                                 </div>
                               )}
+                           </div>
+                        </div>
+
+                        {/* Configuración de la pregunta: Tiempo y Puntos */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div className="flex flex-col gap-2">
+                              <label className="text-sm font-bold text-text-main">Límite de Tiempo</label>
+                              <select
+                                value={timeLimit}
+                                onChange={(e) => setTimeLimit(Number(e.target.value))}
+                                className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent font-semibold font-bold"
+                              >
+                                <option value={10}>10 segundos</option>
+                                <option value={20}>20 segundos</option>
+                                <option value={30}>30 segundos</option>
+                                <option value={60}>60 segundos</option>
+                                <option value={90}>90 segundos</option>
+                                <option value={120}>120 segundos</option>
+                              </select>
+                           </div>
+                           <div className="flex flex-col gap-2">
+                              <label className="text-sm font-bold text-text-main">Puntuación</label>
+                              <select
+                                value={points}
+                                onChange={(e) => setPoints(Number(e.target.value))}
+                                className="flex h-12 w-full rounded-2xl border border-border bg-surface px-4 py-2 text-sm text-text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent font-semibold font-bold"
+                              >
+                                <option value={500}>Puntos reducidos (500 pts)</option>
+                                <option value={1000}>Estándar (1000 pts)</option>
+                                <option value={2000}>Puntos dobles (2000 pts)</option>
+                              </select>
                            </div>
                         </div>
                      </div>
