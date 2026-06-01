@@ -249,7 +249,7 @@ const History = () => {
                   >
                     <div className="flex items-center gap-4">
                       {/* Miniatura / Thumbnail */}
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-primary-light flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 shadow-sm">
+                      <div className="w-16 h-16 rounded-2xl bg-primary-light flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 shadow-sm">
                         {session.quiz.thumbnailUrl ? (
                           <img 
                             src={session.quiz.thumbnailUrl} 

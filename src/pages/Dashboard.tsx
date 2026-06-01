@@ -221,7 +221,7 @@ const Dashboard = () => {
             />
             <Button
               type="submit"
-              variant="secondary"
+              variant="default"
               className="h-auto px-6"
               icon={Send}
             >
@@ -244,7 +244,7 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <Button
                 icon={Sparkles}
-                className="w-full sm:w-auto text-lg shadow-primary-light/50 shadow-lg bg-linear-to-r from-primary to-purple-600 border-0 text-white"
+                className="w-full sm:w-auto text-lg shadow-primary-light/50 shadow-lg bg-primary hover:bg-primary-hover text-white"
                 onClick={() => setIsAiModalOpen(true)}
               >
                 Crear con IA

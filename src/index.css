@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #7f0df2;
-  --color-primary-hover: #6a0bcc;
-  --color-primary-light: #f3eefe;
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-primary-light: #f0fdf4;
 
-  --color-secondary: #ffce00;
-  --color-secondary-hover: #eabf00;
+  --color-secondary: #10b981;
+  --color-secondary-hover: #059669;
 
   --color-background: #fdfbfd;
   --color-surface: #ffffff;
@@ -38,22 +38,22 @@
     --color-text-main: #f4f1f7;
     --color-text-muted: #9d95a5;
     --color-border: #2d2640;
-    --color-primary-light: #2a0f47;
+    --color-primary-light: #0d2d24;
   }
 }
 
 @layer utilities {
   .bg-mesh-primary {
     background:
-      radial-gradient(ellipse at 50% 0%, rgba(127, 13, 242, 0.1) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 100%, rgba(127, 13, 242, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 60%),
+      radial-gradient(ellipse at 85% 100%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
       var(--color-background);
   }
 
   .dark .bg-mesh-primary {
     background:
-      radial-gradient(ellipse at 50% 0%, rgba(127, 13, 242, 0.18) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 100%, rgba(160, 60, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 60%),
+      radial-gradient(ellipse at 85% 100%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
       var(--color-background);
   }
 
@@ -107,4 +107,17 @@
 @keyframes flip {
   0% { transform: rotateX(90deg); opacity: 0; }
   100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+.game-theme {
+  --color-primary: #7f0df2 !important;
+  --color-primary-hover: #6a0bcc !important;
+  --color-primary-light: #f3eefe !important;
+}
+
+.dark .game-theme,
+.game-theme.dark {
+  --color-primary: #7f0df2 !important;
+  --color-primary-hover: #6a0bcc !important;
+  --color-primary-light: #2a0f47 !important;
 }

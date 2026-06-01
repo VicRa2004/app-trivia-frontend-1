@@ -50,21 +50,21 @@ const GameRoom = () => {
     };
   }, [resetGame]);
 
-  if (status === "lobby") {
-    return <LobbyView onStart={emitStartGame} />;
-  }
-
-  if (isHost) {
-    return (
-      <HostView
-        onShowAnswer={emitShowCorrectAnswer}
-        onNextQuestion={emitNextQuestion}
-        onFinishGame={emitFinishGame}
-      />
-    );
-  }
-
-  return <PlayerView onSubmitAnswer={emitSubmitAnswer} />;
+  return (
+    <div className="game-theme w-full flex-1 flex flex-col">
+      {status === "lobby" ? (
+        <LobbyView onStart={emitStartGame} />
+      ) : isHost ? (
+        <HostView
+          onShowAnswer={emitShowCorrectAnswer}
+          onNextQuestion={emitNextQuestion}
+          onFinishGame={emitFinishGame}
+        />
+      ) : (
+        <PlayerView onSubmitAnswer={emitSubmitAnswer} />
+      )}
+    </div>
+  );
 };
 
 export default GameRoom;

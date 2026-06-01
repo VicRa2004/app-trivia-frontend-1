@@ -97,7 +97,7 @@ export const AiGenerateQuizModal = ({
       {/* Caja del Modal */}
       <div className="relative w-full max-w-lg bg-surface dark:bg-surface border border-border shadow-2xl rounded-3xl overflow-hidden z-10 animate-scale-in">
         {/* Cabecera */}
-        <div className="bg-linear-to-r from-primary to-purple-600 text-white px-6 py-5 flex items-center justify-between">
+        <div className="bg-primary text-white px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center border border-white/10 shadow-inner">
               <Sparkles className="w-5.5 h-5.5 text-white" />
@@ -137,7 +137,7 @@ export const AiGenerateQuizModal = ({
                 <h3 className="font-extrabold text-lg text-text-main">
                   Generando tu Trivia...
                 </h3>
-                <p className="text-sm font-semibold text-primary dark:text-purple-400 h-10 animate-fade-in">
+                <p className="text-sm font-semibold text-primary dark:text-emerald-400 h-10 animate-fade-in">
                   {LOADING_MESSAGES[loadingTextIndex]}
                 </p>
                 <p className="text-xs text-text-muted">
@@ -222,7 +222,7 @@ export const AiGenerateQuizModal = ({
                 <Button
                   type="submit"
                   icon={Sparkles}
-                  className="shadow-primary-light/50 shadow-lg bg-linear-to-r from-primary to-purple-600 border-0 text-white"
+                  className="shadow-primary-light/50 shadow-lg bg-primary hover:bg-primary-hover text-white"
                 >
                   Generar Trivia
                 </Button>

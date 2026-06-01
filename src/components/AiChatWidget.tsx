@@ -28,7 +28,7 @@ const MarkdownText = ({ text }: { text: string }) => {
   let html = escapeHtml(text);
 
   // Negrita (**texto**)
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-primary dark:text-purple-400">$1</strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-primary dark:text-emerald-400">$1</strong>');
   
   // Cursiva (*texto*)
   html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
@@ -37,11 +37,11 @@ const MarkdownText = ({ text }: { text: string }) => {
   html = html.replace(/```([\s\S]*?)```/g, '<pre class="bg-background/90 dark:bg-background/40 p-3 rounded-xl text-xs font-mono my-2.5 overflow-x-auto border border-border/80 text-text-main"><code class="block whitespace-pre">$1</code></pre>');
 
   // Código en línea (`código`)
-  html = html.replace(/`([^`]+)`/g, '<code class="bg-primary-light/65 dark:bg-primary-light/10 px-1.5 py-0.5 rounded text-[11px] font-mono text-primary dark:text-purple-300 font-bold">$1</code>');
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-primary-light/65 dark:bg-primary-light/10 px-1.5 py-0.5 rounded text-[11px] font-mono text-primary dark:text-emerald-300 font-bold">$1</code>');
 
   // Encabezados (### título o ## título)
-  html = html.replace(/^### (.*?)$/gm, '<h3 class="font-extrabold text-sm text-primary dark:text-purple-400 mt-3 mb-1.5">$1</h3>');
-  html = html.replace(/^## (.*?)$/gm, '<h4 class="font-extrabold text-base text-primary dark:text-purple-400 mt-3 mb-1.5">$1</h4>');
+  html = html.replace(/^### (.*?)$/gm, '<h3 class="font-extrabold text-sm text-primary dark:text-emerald-400 mt-3 mb-1.5">$1</h3>');
+  html = html.replace(/^## (.*?)$/gm, '<h4 class="font-extrabold text-base text-primary dark:text-emerald-400 mt-3 mb-1.5">$1</h4>');
 
   // Listas de viñetas (- elemento o * elemento)
   html = html.replace(/^[-\*]\s+(.*?)$/gm, '<li class="ml-4 list-disc mb-1">$1</li>');
@@ -133,13 +133,13 @@ export const AiChatWidget = () => {
       {isOpen && (
         <div className="fixed bottom-24 right-6 w-[360px] sm:w-[400px] md:w-[480px] h-[520px] md:h-[650px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-8rem)] bg-surface/90 dark:bg-surface/95 backdrop-blur-md rounded-2xl border border-border shadow-2xl z-50 flex flex-col overflow-hidden animate-scale-in transition-all duration-300">
           {/* Cabecera */}
-          <div className="bg-gradient-to-r from-primary to-purple-600 text-white p-4.5 flex items-center justify-between shadow-md">
+          <div className="bg-primary text-white p-4.5 flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/10 shadow-inner">
                 <Bot className="w-5.5 h-5.5 text-white" />
               </div>
               <div>
-                <h3 className="font-extrabold text-sm tracking-wide md:text-base">Trivia AI</h3>
+                <h3 className="font-extrabold text-sm tracking-wide md:text-base">GreenQuiz AI</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                   <span className="text-[10px] md:text-xs font-semibold text-white/80">En línea</span>
@@ -162,7 +162,7 @@ export const AiChatWidget = () => {
                 <Bot className="w-4 h-4 text-primary" />
               </div>
               <div className="bg-surface border border-border text-text-main rounded-2xl rounded-tl-none px-4 py-2.5 text-sm shadow-sm">
-                <MarkdownText text="¡Hola! Soy tu asistente de **TriviaApp**. Estoy listo para responder tus dudas sobre el juego, las tecnologías utilizadas o la configuración del sistema." />
+                <MarkdownText text="¡Hola! Soy tu asistente de **GreenQuiz**. Estoy listo para responder tus dudas sobre el juego, las tecnologías utilizadas o la configuración del sistema." />
               </div>
             </div>
 

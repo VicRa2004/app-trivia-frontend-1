@@ -11,7 +11,7 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-text-main hover:bg-secondary-hover shadow-md hover:shadow-lg hover:-translate-y-0.5',
         outline: 'border-2 border-primary text-primary hover:bg-primary-light hover:shadow-lg hover:-translate-y-0.5',
         ghost: 'hover:bg-primary-light text-primary hover:-translate-y-0.5',
-        gradient: 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5',
+        gradient: 'bg-gradient-to-r from-primary to-secondary text-white shadow-md hover:shadow-lg hover:-translate-y-0.5',
       },
       size: {
         default: 'h-12 py-2 px-6',

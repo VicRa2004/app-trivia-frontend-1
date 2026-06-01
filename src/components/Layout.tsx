@@ -35,11 +35,12 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             to="/dashboard"
             className="flex items-center gap-2.5 cursor-pointer no-underline group"
           >
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-primary/30 group-hover:shadow-lg group-hover:shadow-primary/40 transition-shadow duration-300">
-              T
-              </div>
-            <span className="font-extrabold tracking-tight text-xl text-text-main hidden sm:inline-block">
-              TriviaApp
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white font-extrabold text-2xl shadow-md shadow-blue-500/30 group-hover:shadow-lg group-hover:shadow-blue-500/40 transition-all duration-300">
+              G
+            </div>
+            <span className="font-extrabold tracking-tight text-xl hidden sm:inline-block">
+              <span className="text-emerald-600 dark:text-emerald-500">Green</span>
+              <span className="text-blue-600 dark:text-blue-500">Quiz</span>
             </span>
           </Link>
 
@@ -114,7 +115,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
       <footer className="border-t border-border py-6 mt-auto">
         <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between text-sm text-text-muted">
-          <span>TriviaApp 2024</span>
+          <span>GreenQuiz 2024</span>
           <div className="flex items-center gap-1">
             <span>Hecho con</span>
             <span className="text-red-500">♥</span>

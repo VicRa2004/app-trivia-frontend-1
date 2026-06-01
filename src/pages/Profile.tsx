@@ -175,11 +175,11 @@ export const Profile = () => {
             
             {/* Tarjeta Perfil Básico */}
             <Card className="overflow-hidden shadow-xl shadow-primary/10 border-2 border-primary/20">
-              <div className="relative h-32 bg-linear-to-br from-primary via-primary-hover to-purple-600">
+              <div className="relative h-32 bg-primary">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzIiBoZWlnaHQ9IjMiPgo8cmVjdCB3aWR0aD0iMyIgaGVpZ2h0PSIzIiBmaWxsPSIjZmZmIj9mIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIzIiBoZWlnaHQ9IjMiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii4wNSI+PC9yZWN0Pgo8L3N2Zz4=')] opacity-30" />
                 <div className="absolute -bottom-12 left-6">
                   <div className="relative">
-                    <div className="w-28 h-28 rounded-full bg-surface border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center bg-linear-to-br from-primary-light to-primary">
+                    <div className="w-28 h-28 rounded-full bg-surface border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center bg-primary-light">
                       {user?.avatar?.imageUrl ? (
                         <img
                           src={`${API_URL}/public${user.avatar.imageUrl}`}
@@ -286,7 +286,7 @@ export const Profile = () => {
 
                   {/* Podios */}
                   <div className="p-4 bg-background border border-border rounded-2xl flex flex-col gap-1.5 shadow-sm hover:scale-[1.02] transition-transform duration-200">
-                    <Sparkles className="w-6 h-6 text-purple-500" />
+                    <Sparkles className="w-6 h-6 text-emerald-500" />
                     <span className="text-2xl font-black text-text-main">
                       {stats?.podiums || 0}
                     </span>
@@ -305,7 +305,7 @@ export const Profile = () => {
             {/* Selector de Avatar */}
             <div className="bg-surface rounded-3xl border-2 border-border p-6 md:p-8 shadow-lg">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -350,7 +350,7 @@ export const Profile = () => {
             {/* Formulario de Edición Perfil y Contraseña */}
             <div className="bg-surface rounded-3xl border-2 border-border p-6 md:p-8 shadow-lg">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
                   <Lock className="w-6 h-6 text-white" />
                 </div>
                 <div>
